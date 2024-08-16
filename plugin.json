@@ -1,0 +1,32 @@
+{
+    "name": "NespressoFTPOrderExport",
+    "marketplaceName":
+    {
+        "de": "NespressoFTPOrderExport",
+        "en": "NespressoFTPOrderExport"
+    },
+    "platform" : {
+        "php" : ">=7.3,<8.1"
+      },
+    "namespace": "NespressoFTPOrderExport",
+    "author": "plentysystems AG",
+    "type": "backend",
+    "version": "1.0.0",
+    "isClosedSource": true,
+    "authorIcon": "icon_author_xs.png",
+    "pluginIcon": "icon_plugin_xs.png",
+    "email": "info@plentymarkets.com",
+    "phone": "",
+    "description": "NespressoFTPOrderExport",
+    "shortDescription": {
+        "de": "NespressoFTPOrderExport short description",
+        "en": "NespressoFTPOrderExport short description"
+    },
+    "keywords": ["NespressoFTPOrderExport"],
+    "categories": ["4124"],
+    "serviceProvider": "NespressoFTPOrderExport\\Providers\\PluginServiceProvider",
+    "runOnBuild": [],
+    "dependencies": {
+        "guzzlehttp/guzzle": "^7.0"
+    }
+}
