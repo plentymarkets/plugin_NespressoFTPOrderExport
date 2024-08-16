@@ -16,6 +16,8 @@ class TestProcedure
         /** @var AuthHelper $authHelper */
         $authHelper = pluginApp(AuthHelper::class);
 
+        $a = 1;
+
         return $authHelper->processUnguarded(function () use ($eventTriggered) {
             return 0;
         });
