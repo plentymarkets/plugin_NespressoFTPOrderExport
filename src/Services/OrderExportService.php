@@ -25,7 +25,7 @@ class OrderExportService
 
     public function processOrder(Order $order)
     {
-        $deliveryAddress = new Address();
+        $deliveryAddress = pluginApp(Address::class);
         if ($order->deliveryAddress->companyName != '') {
             $deliveryAddress->company = $order->deliveryAddress->companyName;
         } else {
@@ -46,7 +46,7 @@ class OrderExportService
         $deliveryAddress->remark = '';
         $deliveryAddress->language = $order->contactReceiver->lang;
 
-        $invoiceAddress = new Address();
+        $invoiceAddress = pluginApp(Address::class);
         if ($order->billingAddress->companyName != '') {
             $invoiceAddress->company = $order->billingAddress->companyName;
         } else {
@@ -67,20 +67,20 @@ class OrderExportService
         $invoiceAddress->remark = '';
         $invoiceAddress->language = $order->contactReceiver->lang;
 
-        $contactPreference = new ContactPreference();
+        $contactPreference = pluginApp(ContactPreference::class);
         $contactPreference->email = $order->contactReceiver->email;
         $contactPreference->mailing_authorization = 0;
         $contactPreference->post_mailing_active = 0;
         $contactPreference->contact_by_phone_allowed = 0;
         $contactPreference->mobile_notification_active = 0;
 
-        $privacyPolicy = new PrivacyPolicy();
+        $privacyPolicy = pluginApp(PrivacyPolicy::class);
         $privacyPolicy->terms_and_condition_accepted = 1;
         $privacyPolicy->allow_use_satisfaction_research = 0;
         $privacyPolicy->allow_personalized_management = 0;
         $privacyPolicy->allow_use_of_personal_data_for_marketing = 0;
 
-        $customer = new Customer();
+        $customer = pluginApp(Customer::class);
         $customer->delivery_address = $deliveryAddress;
         $customer->state_inscription_number = '';
         $customer->vat_number = '';
@@ -96,7 +96,7 @@ class OrderExportService
         $customer->input_user = '';
         $customer->fiscal_receipt = 'true';
 
-        $orderData = new OrderData();
+        $orderData = pluginApp(OrderData::class);
         $orderData->external_order_id = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
         $orderData->movement_code = "3";
         $orderData->order_date = $order->dates->filter(
@@ -108,9 +108,9 @@ class OrderExportService
         $orderData->delivery_mode = 'VZ';
         $orderData->payment_mode = 'XA';
 
-        $orderData->order_details = new OrderDetails();
+        $orderData->order_details = pluginApp(OrderDetails::class);
         foreach ($order->orderItems as $orderItem) {
-            $orderLine = new OrderLine();
+            $orderLine = pluginApp(OrderLine::class);
             $orderLine->product_code = ''; //!!!
             $orderLine->quantity = $orderItem->quantity;
             $orderLine->serial_number = '';
@@ -118,7 +118,7 @@ class OrderExportService
             $orderData->order_details->order_lines[] = $orderLine;
         }
 
-        $record = new Record();
+        $record = pluginApp(Record::class);
 
         $record->record_remarks = "";
         $record->external_ref = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
