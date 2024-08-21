@@ -25,7 +25,9 @@
     "keywords": ["NespressoFTPOrderExport"],
     "categories": ["4124"],
     "serviceProvider": "NespressoFTPOrderExport\\Providers\\PluginServiceProvider",
-    "runOnBuild": [],
+    "runOnBuild": [
+        "NespressoFTPOrderExport\\Migrations\\CreateNespressoExportTable"
+    ],
     "dependencies": {
         "guzzlehttp/guzzle": "^7.0"
     }

@@ -129,7 +129,7 @@ class OrderExportService
         $record->customer = $customer;
         $record->order = $orderData;
 
-        $record->saveRecord($order->plentyId);
+        $record->saveRecord($order->id);
     }
 
     /**
