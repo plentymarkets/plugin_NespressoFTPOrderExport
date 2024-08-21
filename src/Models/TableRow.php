@@ -27,7 +27,7 @@ class TableRow extends Model implements \JsonSerializable
      */
     public $sentAt;
 
-    protected $primaryKeyFieldName     = '$plentyOrderId';
+    protected $primaryKeyFieldName     = 'plentyOrderId';
     protected $primaryKeyFieldType     = self::FIELD_TYPE_INT;
     protected $autoIncrementPrimaryKey = false;
 
