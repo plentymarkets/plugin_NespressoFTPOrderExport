@@ -36,7 +36,7 @@ class TableRow extends Model implements \JsonSerializable
      */
     public function getTableName(): string
     {
-        return 'Nespresso::export_stack';
+        return 'NespressoFTPOrderExport::export_stack';
     }
 
     /**
