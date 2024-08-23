@@ -52,9 +52,11 @@ class ExportDataRepository implements ExportDataRepositoryContract
     /**
      * @return TableRow[]
      */
-    public function list()
+    public function list(int $maxRows)
     {
-        return $this->database->query(TableRow::class)->get();
+        return $this->database->query(TableRow::class)
+            ->limit($maxRows)
+            ->get();
     }
 
 }

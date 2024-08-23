@@ -11,5 +11,5 @@ interface ExportDataRepositoryContract
 
     public function get($plentyOrderId);
 
-    public function list();
+    public function list(int $maxRows);
 }

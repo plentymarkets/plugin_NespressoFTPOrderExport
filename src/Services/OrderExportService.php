@@ -2,6 +2,8 @@
 
 namespace NespressoFTPOrderExport\Services;
 
+use Carbon\Carbon;
+use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Models\Address;
 use NespressoFTPOrderExport\Models\ContactPreference;
 use NespressoFTPOrderExport\Models\Customer;
@@ -10,11 +12,15 @@ use NespressoFTPOrderExport\Models\OrderDetails;
 use NespressoFTPOrderExport\Models\OrderLine;
 use NespressoFTPOrderExport\Models\PrivacyPolicy;
 use NespressoFTPOrderExport\Models\Record;
+use NespressoFTPOrderExport\Models\TableRow;
+use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
 use Plenty\Plugin\Log\Loggable;
+
+use function Kelunik\Acme\Protocol\string;
 
 class OrderExportService
 {
@@ -130,6 +136,8 @@ class OrderExportService
         $record->order = $orderData;
 
         $record->saveRecord($order->id);
+
+        $this->sendDataToClient();
     }
 
     /**
@@ -140,5 +148,111 @@ class OrderExportService
     public function checkAddressDifferent(): int
     {
         return 1;
+    }
+
+    public function getBatchNumber()
+    {
+        return '01';
+    }
+
+    public function arrayToXml($array) {
+        if (($array === null) || (count($array) == 0)){
+            return '';
+        }
+
+        $str = '';
+
+        foreach ($array as $k => $v) {
+            if (is_array($v)) {
+                if (is_int($k)){
+                    $str .= "<order_line>\n" . $this->arrayToXml($v) . "</order_line>\n";
+                } else {
+                    if (is_string($k) && ($k === 'order_lines')){
+                        $str .= $this->arrayToXml($v);
+                    } else {
+                        $str .= "<$k>\n" . $this->arrayToXml($v) . "</$k>\n";
+                    }
+                }
+            }
+            else {
+                if ((string)$v === ''){
+                    $str .= "<$k />\n";
+                } else {
+                    $str .= "<$k>" . $v . "</$k>\n";
+                }
+            }
+        }
+        return $str;
+    }
+
+    public function generateXMLFromOrderData($exportList, $generationTime): string
+    {
+        $resultedXML = '
+<?xml version="1.0" encoding="UTF-16" standalone="no" ?>
+<import_batch version_number="1.0" xmlns="http://nesclub.nespresso.com/webservice/club/xsd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nesclub.nespresso.com/webservice/club/xsd/ http://nesclub.nespresso.com/webservice/club/xsd/">
+  	<!-- HEADER STARTS HERE--> 
+	<batch_date_time>'.$generationTime.'</batch_date_time>
+	<batch_number>'.$this->getBatchNumber().'</batch_number> <!-- Batch Number is continous, starting with 01 -->
+	<sender_id>89</sender_id>
+';
+
+        $totalQuantities = 0;
+        $customerList = [];
+
+        /** @var TableRow $order */
+        foreach ($exportList as $order){
+            $orderData = json_decode($order->exportedData, true);
+            $resultedXML .= $this->arrayToXml(['record' => $orderData]);
+
+            foreach ($orderData['order']['order_details']['order_lines'] as $orderLine){
+                $totalQuantities += $orderLine['quantity'];
+            }
+
+            $currentCustomer = $orderData['customer']['company'];
+            if (!in_array($currentCustomer, $customerList)){
+                $customerList[] = $currentCustomer;
+            }
+        }
+
+        $resultedXML .= '
+<total_orders>'.count($exportList).'</total_orders> 
+<total_quantity>'.$totalQuantities.'</total_quantity> 
+<total_customers>'.count($customerList).'</total_customers> 
+<total_members>'.count($customerList).'</total_members> 
+</import_batch>
+        ';
+
+        return $resultedXML;
+    }
+
+    public function sendToFTP($xmlContent)
+    {
+        $a = $xmlContent;
+        return true;
+    }
+
+    public function sendDataToClient(): bool
+    {
+        /** @var ExportDataRepository $exportDataRepository */
+        $exportDataRepository = pluginApp(ExportDataRepository::class);
+        try {
+            $exportList = $exportDataRepository->list(50);
+        } catch (\Throwable $e) {
+            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
+                [
+                    'message'     => $e->getMessage(),
+                ]);
+            return false;
+        }
+
+        $generationTime = Carbon::now()->toDateTimeString();
+        $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime);
+        if (!$this->sendToFTP($xmlContent)){
+            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.wrtiteFtpError',
+                []);
+            return false;
+        }
+
+        return true;
     }
 }
