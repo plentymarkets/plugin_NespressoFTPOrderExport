@@ -52,11 +52,28 @@ class ExportDataRepository implements ExportDataRepositoryContract
     /**
      * @return TableRow[]
      */
-    public function list(int $maxRows)
+    public function listUnsent(int $maxRows)
     {
         return $this->database->query(TableRow::class)
+            ->where('sentAt', '=', '')
             ->limit($maxRows)
             ->get();
+    }
+
+    /**
+     * @param int $plentyOrderId
+     * @return bool
+     */
+    public function orderExists(int $plentyOrderId) : bool
+    {
+        $results = $this->database->query(TableRow::class)
+            ->where('plentyOrderId', '=', $plentyOrderId)
+            ->limit(1)
+            ->get();
+        if (count($results) > 0){
+            return true;
+        }
+        return false;
     }
 
 }

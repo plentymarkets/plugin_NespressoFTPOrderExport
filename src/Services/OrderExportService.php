@@ -14,11 +14,13 @@ use NespressoFTPOrderExport\Models\PrivacyPolicy;
 use NespressoFTPOrderExport\Models\Record;
 use NespressoFTPOrderExport\Models\TableRow;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
+use NespressoFTPOrderExport\Repositories\SettingRepository;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
 use Plenty\Plugin\Log\Loggable;
+
 
 use function Kelunik\Acme\Protocol\string;
 
@@ -117,7 +119,7 @@ class OrderExportService
         $orderData->order_details = pluginApp(OrderDetails::class);
         foreach ($order->orderItems as $orderItem) {
             $orderLine = pluginApp(OrderLine::class);
-            $orderLine->product_code = ''; //!!!
+            $orderLine->product_code = $orderItem->variation->number;
             $orderLine->quantity = $orderItem->quantity;
             $orderLine->serial_number = '';
 
@@ -152,7 +154,8 @@ class OrderExportService
 
     public function getBatchNumber()
     {
-        return '01';
+        $settingsRepository = pluginApp(SettingRepository::class);
+        return $settingsRepository->getBatchNumber();
     }
 
     public function arrayToXml($array) {
@@ -185,6 +188,11 @@ class OrderExportService
         return $str;
     }
 
+    /**
+     * @param TableRow[] $exportList
+     * @param string $generationTime
+     * @return string
+     */
     public function generateXMLFromOrderData($exportList, $generationTime): string
     {
         $resultedXML = '
@@ -231,17 +239,52 @@ class OrderExportService
         return true;
     }
 
+    /**
+     * @param TableRow[]$exportList
+     * @param string $generationTime
+     * @return void
+     */
+    public function markRowsAsSent($exportList, $generationTime): void
+    {
+        /** @var ExportDataRepository $exportDataRepository */
+        $exportDataRepository = pluginApp(ExportDataRepository::class);
+
+        try {
+            /** @var TableRow $order */
+            foreach ($exportList as $order){
+                $exportData = [
+                    'plentyOrderId'    => $order->plentyOrderId,
+                    'exportedData'     => $order->exportedData,
+                    'savedAt'          => $order->savedAt,
+                    'sentAt'           => $generationTime,
+                ];
+                $exportDataRepository->save($exportData);
+            }
+        } catch (\Throwable $e) {
+            $this->getLogger(__METHOD__)->error(
+                PluginConfiguration::PLUGIN_NAME . '::error.updateMarkError',
+                [
+                    'message' => $e->getMessage(),
+                ]
+            );
+        }
+    }
+
     public function sendDataToClient(): bool
     {
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
-            $exportList = $exportDataRepository->list(50);
+            $exportList = $exportDataRepository->listUnsent(50);
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
                 [
                     'message'     => $e->getMessage(),
                 ]);
+            return false;
+        }
+
+        if (count($exportList) == 0){
             return false;
         }
 
@@ -253,6 +296,12 @@ class OrderExportService
             return false;
         }
 
+        $settingsRepository = pluginApp(SettingRepository::class);
+        $settingsRepository->incrementBatchNumber();
+
+        $this->markRowsAsSent($exportList, $generationTime);
+
         return true;
     }
+
 }

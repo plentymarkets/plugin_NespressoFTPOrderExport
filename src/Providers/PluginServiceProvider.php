@@ -3,6 +3,7 @@ namespace NespressoFTPOrderExport\Providers;
 
 use ErrorException;
 use Exception;
+use NespressoFTPOrderExport\Crons\SendDataCron;
 use Plenty\Modules\Cron\Services\CronContainer;
 use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
 use Plenty\Modules\EventProcedures\Services\EventProceduresService;
@@ -31,6 +32,7 @@ class PluginServiceProvider extends ServiceProvider
         WizardContainerContract $wizardContainerContract,
         Application $app
     ) {
+        $container->add(CronContainer::EVERY_FIFTEEN_MINUTES, SendDataCron::class);
         $this->bootProcedures($eventProceduresService);
         $this->getApplication()->register(NespressoFTPOrderExportRouteServiceProvider::class);
     }

@@ -33,11 +33,6 @@ class SettingRepository implements SettingRepositoryContract
      */
     public function save($key, $value): Model
     {
-        SettingsSaveValidator::validateOrFail([
-            'key'   => $key,
-            'value' => $value
-        ]);
-
         $settings        = pluginApp(Setting::class);
         $settings->key   = (string)$key;
         $settings->value = (string)$value;
@@ -64,5 +59,28 @@ class SettingRepository implements SettingRepositoryContract
     public function list()
     {
         return $this->database->query(Setting::class)->get();
+    }
+
+    public function getBatchNumber(): string
+    {
+        $batch = $this->get('batch_number');
+
+        if ($batch === null){
+            $this->save('batch_number', 1);
+            return '01';
+        }
+
+        if ((int)$batch < 10){
+            return '0' . $batch;
+        }
+
+        return (string)$batch;
+    }
+
+    public function incrementBatchNumber(): void
+    {
+        $batch = $this->getBatchNumber();
+        $nextBatch = (int)$batch + 1;
+        $this->save('batch_number', $nextBatch);
     }
 }

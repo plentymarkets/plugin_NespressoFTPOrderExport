@@ -67,9 +67,12 @@ class Record
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
-            /** @var TableRow $savedObject */
-            $savedObject = $exportDataRepository->save($exportData);
-            return true;
+            if (!$exportDataRepository->orderExists($plentyOrderId)) {
+                /** @var TableRow $savedObject */
+                $savedObject = $exportDataRepository->save($exportData);
+                return true;
+            }
+            return false;
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.saveExportError',
                 [
