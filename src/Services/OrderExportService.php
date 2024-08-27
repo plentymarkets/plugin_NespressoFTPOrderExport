@@ -3,6 +3,7 @@
 namespace NespressoFTPOrderExport\Services;
 
 use Carbon\Carbon;
+use NespressoFTPOrderExport\Clients\SFTPClient;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Models\Address;
 use NespressoFTPOrderExport\Models\ContactPreference;
@@ -26,9 +27,14 @@ use function Kelunik\Acme\Protocol\string;
 
 class OrderExportService
 {
+    /**
+     * @var SFTPClient
+     */
+    private $ftpClient;
 
-    public function __construct(
-    ) {
+    public function __construct(SFTPClient $ftpClient)
+    {
+        $this->ftpClient       = $ftpClient;
     }
 
     public function processOrder(Order $order)
@@ -235,7 +241,19 @@ class OrderExportService
 
     public function sendToFTP($xmlContent)
     {
-        $a = $xmlContent;
+        $fileName = "abc.xml";
+        try {
+            $this->ftpClient->uploadXML($fileName, $xmlContent);
+        } catch (\Throwable $exception) {
+            $this->getLogger(__METHOD__)->error(
+                PluginConfiguration::PLUGIN_NAME . '::error.writeFtpError',
+                [
+                    'message' => $exception->getMessage(),
+                    'fileNamw'=> $fileName
+                ]
+            );
+            return false;
+        }
         return true;
     }
 
@@ -291,7 +309,7 @@ class OrderExportService
         $generationTime = Carbon::now()->toDateTimeString();
         $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime);
         if (!$this->sendToFTP($xmlContent)){
-            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.wrtiteFtpError',
+            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.writeFtpError',
                 []);
             return false;
         }

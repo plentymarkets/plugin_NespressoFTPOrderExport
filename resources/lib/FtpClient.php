@@ -132,4 +132,37 @@ class FtpClient
         }
 
     }
+
+    /**
+     * Upload a file to FTP
+     *
+     * @param          $fileName
+     * @param  string  $content
+     * @return bool
+     * @throws Exception
+     */
+    public function upload($fileName, string $content)
+    {
+        if ($fp = fopen('php://temp', 'w+')) {
+            try {
+                fwrite($fp, $content);
+                rewind($fp);
+                $this->curlHandle = $this->connect($fileName);
+                curl_setopt($this->curlHandle, CURLOPT_UPLOAD, 1);
+                curl_setopt($this->curlHandle, CURLOPT_INFILE, $fp);
+                curl_exec($this->curlHandle);
+                $err = curl_error($this->curlHandle);
+
+                if ($err) {
+                    throw new \Exception($err);
+                }
+
+                return !$err;
+            } finally {
+                fclose($fp);
+            }
+        }
+
+        return false;
+    }
 }
