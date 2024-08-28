@@ -76,4 +76,14 @@ class ExportDataRepository implements ExportDataRepositoryContract
         return false;
     }
 
+    /**
+     * @param string $dateLimit
+     * @return void
+     */
+    public function deleteOldRecords(string $dateLimit) : void
+    {
+        $this->database->query(TableRow::class)
+            ->where('sentAt', '<', $dateLimit)
+            ->delete();
+    }
 }

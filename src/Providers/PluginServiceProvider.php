@@ -3,6 +3,7 @@ namespace NespressoFTPOrderExport\Providers;
 
 use ErrorException;
 use Exception;
+use NespressoFTPOrderExport\Crons\ClearExportTableCron;
 use NespressoFTPOrderExport\Crons\SendDataCron;
 use Plenty\Modules\Cron\Services\CronContainer;
 use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
@@ -33,6 +34,7 @@ class PluginServiceProvider extends ServiceProvider
         Application $app
     ) {
         $container->add(CronContainer::EVERY_FIFTEEN_MINUTES, SendDataCron::class);
+        $container->add(CronContainer::DAILY, ClearExportTableCron::class);
         $this->bootProcedures($eventProceduresService);
         $this->getApplication()->register(NespressoFTPOrderExportRouteServiceProvider::class);
     }

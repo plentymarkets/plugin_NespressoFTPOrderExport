@@ -11,6 +11,10 @@ class SendDataCron extends CronHandler
 {
     use Loggable;
 
+    /**
+     * @param OrderExportService $exportService
+     * @return bool
+     */
     public function handle(OrderExportService $exportService)
     {
         return $exportService->sendDataToClient();

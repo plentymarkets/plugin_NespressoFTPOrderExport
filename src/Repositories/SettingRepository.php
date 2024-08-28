@@ -61,6 +61,10 @@ class SettingRepository implements SettingRepositoryContract
         return $this->database->query(Setting::class)->get();
     }
 
+    /**
+     * @return string
+     * @throws ValidationException
+     */
     public function getBatchNumber(): string
     {
         $batch = $this->get('batch_number');
@@ -77,6 +81,10 @@ class SettingRepository implements SettingRepositoryContract
         return (string)$batch;
     }
 
+    /**
+     * @return void
+     * @throws ValidationException
+     */
     public function incrementBatchNumber(): void
     {
         $batch = $this->getBatchNumber();

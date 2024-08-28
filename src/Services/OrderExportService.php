@@ -16,27 +16,32 @@ use NespressoFTPOrderExport\Models\Record;
 use NespressoFTPOrderExport\Models\TableRow;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
-use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
 use Plenty\Plugin\Log\Loggable;
 
-
-use function Kelunik\Acme\Protocol\string;
-
 class OrderExportService
 {
+    use Loggable;
+
     /**
      * @var SFTPClient
      */
     private $ftpClient;
 
+    /**
+     * @param SFTPClient $ftpClient
+     */
     public function __construct(SFTPClient $ftpClient)
     {
         $this->ftpClient       = $ftpClient;
     }
 
+    /**
+     * @param Order $order
+     * @return void
+     */
     public function processOrder(Order $order)
     {
         $deliveryAddress = pluginApp(Address::class);
@@ -46,7 +51,7 @@ class OrderExportService
             $deliveryAddress->company = '0';
         }
         $deliveryAddress->contact = '';
-        $deliveryAddress->name = $order->deliveryAddress->firstName . ' ' . $order->deliveryAddress->lastName;
+        $deliveryAddress->name = $order->deliveryAddress->lastName;
         $deliveryAddress->first_name = $order->deliveryAddress->firstName;
         $deliveryAddress->civility = 5;
         $deliveryAddress->extra_name = '';
@@ -58,7 +63,7 @@ class OrderExportService
         $deliveryAddress->area1 = '';
         $deliveryAddress->area2 = '';
         $deliveryAddress->remark = '';
-        $deliveryAddress->language = $order->contactReceiver->lang;
+        $deliveryAddress->language = $this->getOrderLanguage($order);
 
         $invoiceAddress = pluginApp(Address::class);
         if ($order->billingAddress->companyName != '') {
@@ -67,7 +72,7 @@ class OrderExportService
             $invoiceAddress->company = '0';
         }
         $invoiceAddress->contact = '';
-        $invoiceAddress->name = $order->billingAddress->firstName . ' ' . $order->deliveryAddress->lastName;
+        $invoiceAddress->name = $order->deliveryAddress->lastName;
         $invoiceAddress->first_name = $order->billingAddress->firstName;
         $invoiceAddress->civility = 5;
         $invoiceAddress->extra_name = '';
@@ -79,7 +84,7 @@ class OrderExportService
         $invoiceAddress->area1 = '';
         $invoiceAddress->area2 = '';
         $invoiceAddress->remark = '';
-        $invoiceAddress->language = $order->contactReceiver->lang;
+        $invoiceAddress->language = $this->getOrderLanguage($order);
 
         $contactPreference = pluginApp(ContactPreference::class);
         $contactPreference->email = $order->contactReceiver->email;
@@ -98,7 +103,7 @@ class OrderExportService
         $customer->delivery_address = $deliveryAddress;
         $customer->state_inscription_number = '';
         $customer->vat_number = '';
-        $customer->address_different = $this->checkAddressDifferent();
+        $customer->address_different = ($order->deliveryAddress->id == $order->billingAddress->id);
         if ($order->deliveryAddress->companyName != '') {
             $customer->company = $order->deliveryAddress->companyName;
         } else {
@@ -144,27 +149,23 @@ class OrderExportService
         $record->order = $orderData;
 
         $record->saveRecord($order->id);
-
-        $this->sendDataToClient();
     }
 
     /**
-     * @param \Plenty\Modules\Account\Address\Models\Address $firstAddress
-     * @param \Plenty\Modules\Account\Address\Models\Address $secondAddress
-     * @return void
+     * @return string
      */
-    public function checkAddressDifferent(): int
-    {
-        return 1;
-    }
-
-    public function getBatchNumber()
+    public function getBatchNumber(): string
     {
         $settingsRepository = pluginApp(SettingRepository::class);
         return $settingsRepository->getBatchNumber();
     }
 
-    public function arrayToXml($array) {
+    /**
+     * @param $array
+     * @return string
+     */
+    public function arrayToXml($array): string
+    {
         if (($array === null) || (count($array) == 0)){
             return '';
         }
@@ -197,16 +198,17 @@ class OrderExportService
     /**
      * @param TableRow[] $exportList
      * @param string $generationTime
+     * @param string $batchNo
      * @return string
      */
-    public function generateXMLFromOrderData($exportList, $generationTime): string
+    public function generateXMLFromOrderData($exportList, $generationTime, $batchNo): string
     {
         $resultedXML = '
 <?xml version="1.0" encoding="UTF-16" standalone="no" ?>
 <import_batch version_number="1.0" xmlns="http://nesclub.nespresso.com/webservice/club/xsd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nesclub.nespresso.com/webservice/club/xsd/ http://nesclub.nespresso.com/webservice/club/xsd/">
   	<!-- HEADER STARTS HERE--> 
 	<batch_date_time>'.$generationTime.'</batch_date_time>
-	<batch_number>'.$this->getBatchNumber().'</batch_number> <!-- Batch Number is continous, starting with 01 -->
+	<batch_number>'.$batchNo.'</batch_number> <!-- Batch Number is continous, starting with 01 -->
 	<sender_id>89</sender_id>
 ';
 
@@ -239,9 +241,15 @@ class OrderExportService
         return $resultedXML;
     }
 
-    public function sendToFTP($xmlContent)
+    /**
+     * @param string $xmlContent
+     * @param string $filePrefix
+     * @param string $batchNo
+     * @return bool
+     */
+    public function sendToFTP(string $xmlContent, string $filePrefix, string $batchNo)
     {
-        $fileName = "abc.xml";
+        $fileName = $filePrefix . '-32-'.$batchNo.'.xml';
         try {
             $this->ftpClient->uploadXML($fileName, $xmlContent);
         } catch (\Throwable $exception) {
@@ -288,6 +296,9 @@ class OrderExportService
         }
     }
 
+    /**
+     * @return bool
+     */
     public function sendDataToClient(): bool
     {
         /** @var ExportDataRepository $exportDataRepository */
@@ -306,9 +317,15 @@ class OrderExportService
             return false;
         }
 
-        $generationTime = Carbon::now()->toDateTimeString();
-        $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime);
-        if (!$this->sendToFTP($xmlContent)){
+        $thisTime = Carbon::now();
+        $generationTime = $thisTime->toDateTimeString();
+        $batchNo = $this->getBatchNumber();
+        $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo);
+        if (!$this->sendToFTP(
+            $xmlContent,
+            $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
+            $batchNo
+        )){
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.writeFtpError',
                 []);
             return false;
@@ -320,6 +337,42 @@ class OrderExportService
         $this->markRowsAsSent($exportList, $generationTime);
 
         return true;
+    }
+
+    /**
+     * @return void
+     */
+    public function clearExportTable(): void
+    {
+        /** @var ExportDataRepository $exportDataRepository */
+        $exportDataRepository = pluginApp(ExportDataRepository::class);
+        try {
+            $exportDataRepository->deleteOldRecords(Carbon::now()->subDays(30)->toDateTimeString());
+        } catch (\Throwable $e) {
+            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.clearExportTableError',
+                [
+                    'message'     => $e->getMessage(),
+                ]);
+        }
+    }
+
+    /**
+     * @param Order $order
+     * @return string
+     */
+    public static function getOrderLanguage(Order $order)
+    {
+        $documentLanguage = $order->properties->where('typeId', OrderPropertyType::DOCUMENT_LANGUAGE)->first()->value;
+        if(!empty($documentLanguage))
+        {
+            return strtolower($documentLanguage);
+        }
+
+        if ($order->contactReceiver->lang !== ''){
+            return $order->contactReceiver->lang;
+        }
+
+        return 'de';
     }
 
 }

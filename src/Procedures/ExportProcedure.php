@@ -15,6 +15,12 @@ class ExportProcedure
 {
     use Loggable;
 
+    /**
+     * @param EventProceduresTriggered $eventTriggered
+     * @param OrderExportService $exportService
+     * @return mixed
+     * @throws Throwable
+     */
     public function run(
         EventProceduresTriggered $eventTriggered,
         OrderExportService       $exportService
