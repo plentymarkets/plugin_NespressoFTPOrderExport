@@ -16,6 +16,7 @@ use NespressoFTPOrderExport\Models\Record;
 use NespressoFTPOrderExport\Models\TableRow;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
+use Plenty\Modules\Account\Address\Models\AddressOption;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
@@ -51,12 +52,18 @@ class OrderExportService
             $deliveryAddress->company = '0';
         }
         $deliveryAddress->contact = '';
-        $deliveryAddress->name = $order->deliveryAddress->lastName;
-        $deliveryAddress->first_name = $order->deliveryAddress->firstName;
+        $deliveryAddress->name = $order->deliveryAddress->name3;
+        $deliveryAddress->first_name = $order->deliveryAddress->name2;
         $deliveryAddress->civility = 5;
-        $deliveryAddress->extra_name = '';
-        $deliveryAddress->address_line1 = $order->deliveryAddress->address1;
-        $deliveryAddress->address_line2 = $order->deliveryAddress->address2;
+        $deliveryAddress->extra_name = $order->deliveryAddress->name4;
+        $deliveryAddress->address_line1 = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
+        $deliveryAddress->address_line2 = '';
+        if ($deliveryAddress->address_line1 === ''){
+            if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
+                $deliveryAddress->address_line1 = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
+                $deliveryAddress->address_line2 = $order->deliveryAddress->address4;
+            }
+        }
         $deliveryAddress->post_code = $order->deliveryAddress->postalCode;
         $deliveryAddress->city = $order->deliveryAddress->town;
         $deliveryAddress->country = $order->deliveryAddress->country->isoCode2;
@@ -72,12 +79,18 @@ class OrderExportService
             $invoiceAddress->company = '0';
         }
         $invoiceAddress->contact = '';
-        $invoiceAddress->name = $order->deliveryAddress->lastName;
-        $invoiceAddress->first_name = $order->billingAddress->firstName;
+        $invoiceAddress->name = $order->deliveryAddress->name3;
+        $invoiceAddress->first_name = $order->billingAddress->name2;
         $invoiceAddress->civility = 5;
         $invoiceAddress->extra_name = '';
-        $invoiceAddress->address_line1 = $order->billingAddress->address1;
-        $invoiceAddress->address_line2 = $order->billingAddress->address2;
+        $invoiceAddress->address_line1 = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
+        $invoiceAddress->address_line2 = '';
+        if ($invoiceAddress->address_line1 === ''){
+            if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
+                $invoiceAddress->address_line1 = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
+                $invoiceAddress->address_line2 = $order->billingAddress->address4;
+            }
+        }
         $invoiceAddress->post_code = $order->billingAddress->postalCode;
         $invoiceAddress->city = $order->billingAddress->town;
         $invoiceAddress->country = $order->billingAddress->country->isoCode2;
@@ -87,7 +100,7 @@ class OrderExportService
         $invoiceAddress->language = $this->getOrderLanguage($order);
 
         $contactPreference = pluginApp(ContactPreference::class);
-        $contactPreference->email = $order->contactReceiver->email;
+        $contactPreference->email = $order->billingAddress->email;
         $contactPreference->mailing_authorization = 0;
         $contactPreference->post_mailing_active = 0;
         $contactPreference->contact_by_phone_allowed = 0;
