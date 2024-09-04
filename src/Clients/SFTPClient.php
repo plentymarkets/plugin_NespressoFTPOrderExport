@@ -11,7 +11,7 @@ class SFTPClient
 {
     use Loggable;
 
-    const TRANSFER_PROTOCOL = 'FTP';
+    const TRANSFER_PROTOCOL = 'SFTP';
 
     /** @var LibraryCallContract */
     private $library;
