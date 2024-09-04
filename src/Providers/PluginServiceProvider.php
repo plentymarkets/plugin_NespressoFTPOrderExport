@@ -33,7 +33,7 @@ class PluginServiceProvider extends ServiceProvider
         WizardContainerContract $wizardContainerContract,
         Application $app
     ) {
-        $container->add(CronContainer::EVERY_FIFTEEN_MINUTES, SendDataCron::class);
+        $container->add(CronContainer::EVERY_FIVE_MINUTES, SendDataCron::class);
         $container->add(CronContainer::DAILY, ClearExportTableCron::class);
         $this->bootProcedures($eventProceduresService);
         $this->getApplication()->register(NespressoFTPOrderExportRouteServiceProvider::class);
