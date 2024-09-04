@@ -57,7 +57,11 @@ class SFTPClient
             $this->getLogger(__METHOD__)
                 ->error(PluginConfiguration::PLUGIN_NAME . '::globals.ftpFileUploadError',
                     [
-                        'errorMsg'  => $result['message'],
+                        'errorMsg'          => $result['error_msg'],
+                        'error_no'          => $result['error_no'],
+                        'error_file'        => $result['error_file'],
+                        'error_line'        => $result['error_line'],
+                        'lib_call_response' => $result['lib_call_response'],
                         'host'      => $this->credentials['ftp_hostname'],
                         'user'      => $this->credentials['ftp_username'],
                         'port'      => $this->credentials['ftp_port'],

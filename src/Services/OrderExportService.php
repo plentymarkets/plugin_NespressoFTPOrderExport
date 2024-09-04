@@ -180,6 +180,8 @@ class OrderExportService
         $record->order = $orderData;
 
         $record->saveRecord($order->id);
+
+        $this->sendDataToClient();
     }
 
     /**
