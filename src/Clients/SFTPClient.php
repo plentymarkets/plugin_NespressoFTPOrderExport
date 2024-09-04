@@ -40,6 +40,7 @@ class SFTPClient
 
     public function uploadXML(string $fileName, string $content)
     {
+        $startTime = microtime(true);
         $result = $this->library->call(PluginConfiguration::PLUGIN_NAME . "::ftp_uploadXML", [
             'transferProtocol' => self::TRANSFER_PROTOCOL,
             'host'             => $this->credentials['ftp_hostname'],
@@ -51,6 +52,7 @@ class SFTPClient
         ]);
 
         if (is_array($result) && array_key_exists('error', $result) && $result['error'] === true) {
+            $endTime = microtime(true);
             $this->getLogger(__METHOD__)
                 ->error(PluginConfiguration::PLUGIN_NAME . '::globals.ftpFileUploadError',
                     [
@@ -58,7 +60,8 @@ class SFTPClient
                         'host'      => $this->credentials['ftp_hostname'],
                         'user'      => $this->credentials['ftp_username'],
                         'port'      => $this->credentials['ftp_port'],
-                        'fileName'  => $fileName
+                        'fileName'  => $fileName,
+                        'time'      => ($endTime - $startTime)
                     ]
                 );
 
