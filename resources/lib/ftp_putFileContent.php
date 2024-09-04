@@ -10,17 +10,14 @@ function buildPath($directory, $filename) {
     return $path.$filename;
 }
 
-$config = SdkRestApi::getParam('config');
-$params = SdkRestApi::getParam('params');
+$host = SdkRestApi::getParam('host');
+$username = SdkRestApi::getParam('username');
+$password = SdkRestApi::getParam('password');
+$port = SdkRestApi::getParam('port');
 
-$host = $config['host'];
-$username = $config['username'];
-$password = $config['password'];
-$port = $config['port'];
-
-$directory = $params['directory'];
-$filename = $params['filename'];
-$content = $params['content'];
+$directory = SdkRestApi::getParam('directory');
+$filename = SdkRestApi::getParam('filename');
+$content = SdkRestApi::getParam('content');
 
 // check params
 if(!strlen($host)) {
