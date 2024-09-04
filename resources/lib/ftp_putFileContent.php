@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/SftpClient.php';
+require_once __DIR__ . '/SFtpClient.php';
 
 function buildPath($directory, $filename) {
     $path = '';
