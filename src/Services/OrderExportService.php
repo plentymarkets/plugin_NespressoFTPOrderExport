@@ -282,13 +282,20 @@ class OrderExportService
     {
         $fileName = $filePrefix . '-32-'.$batchNo.'.xml';
         try {
+            $this->getLogger(__METHOD__)->info(
+                PluginConfiguration::PLUGIN_NAME . '::general.logMessage',
+                [
+                    'xmlContent' => $xmlContent,
+                    'fileName'=> $fileName
+                ]
+            );
             $this->ftpClient->uploadXML($fileName, $xmlContent);
         } catch (\Throwable $exception) {
             $this->getLogger(__METHOD__)->error(
                 PluginConfiguration::PLUGIN_NAME . '::error.writeFtpError',
                 [
                     'message' => $exception->getMessage(),
-                    'fileNamw'=> $fileName
+                    'fileName'=> $fileName
                 ]
             );
             return false;
