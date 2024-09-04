@@ -58,6 +58,8 @@ class FtpClient
         curl_reset($this->curlHandle);
         curl_setopt($this->curlHandle, CURLOPT_URL, $this->protocol . $this->host . '/' . $remote);
         curl_setopt($this->curlHandle, CURLOPT_USERPWD, $this->user . ':' . $this->password);
+        curl_setopt($this->curlHandle, CURLOPT_FTP_RESPONSE_TIMEOUT, 15);
+        curl_setopt($this->curlHandle, CURLOPT_TIMEOUT, 15);
         curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($this->curlHandle, CURLOPT_FTP_SSL, CURLFTPSSL_TRY);
