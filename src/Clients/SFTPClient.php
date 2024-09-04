@@ -41,13 +41,14 @@ class SFTPClient
     public function uploadXML(string $fileName, string $content)
     {
         $startTime = microtime(true);
-        $result = $this->library->call(PluginConfiguration::PLUGIN_NAME . "::ftp_uploadXML", [
+        $result = $this->library->call(PluginConfiguration::PLUGIN_NAME . "::ftp_putFileContent", [
             'transferProtocol' => self::TRANSFER_PROTOCOL,
             'host'             => $this->credentials['ftp_hostname'],
             'user'             => $this->credentials['ftp_username'],
-            'password'         => $this->credentials['ftp_password'],
+            'privateKeyContent'=> $this->credentials['ftp_password'],
+            'publicKeyContent' => '',
             'port'             => $this->credentials['ftp_port'],
-            'fileName'         => $fileName,
+            'path'             => './' . $fileName,
             'content'          => $content
         ]);
 
