@@ -67,28 +67,18 @@ class SFtpClient
 
     /**
      * @param string $fileName
-     * @param array  $content
+     * @param string  $content
      *
      * @return bool
      */
-    public function uploadFile( string $fileName, array $content ) : bool
+    public function uploadFile( string $fileName, string $content ) : bool
     {
         if( $fp = fopen( 'php://temp', 'w+' ) )
         {
             try
             {
-                /*foreach( $content as $fields ) {
-                    fputcsv( $fp, $fields );
-                }
-                rewind( $fp );*/
-
-                $separator = html_entity_decode( ',' );
-                foreach( $content as $fields )
-                {
-                    fwrite( $fp, implode( $separator, $fields ) . "\r\n" );
-                }
+                fwrite( $fp, $content . "\r\n" );
                 rewind( $fp );
-
                 return $this->sftp->put( $fileName, $fp, SFTP::SOURCE_LOCAL_FILE );
             }
             finally
@@ -96,6 +86,7 @@ class SFtpClient
                 fclose( $fp );
             }
         }
+        return false;
     }
 
     /**
