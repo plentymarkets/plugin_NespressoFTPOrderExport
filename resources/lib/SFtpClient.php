@@ -12,6 +12,8 @@ class SFtpClient
     private $username;
     private $password;
 
+    private $port;
+
     private $sftp;
 
     public function __construct( string $server, string $username, string $password, string $port )
@@ -19,8 +21,7 @@ class SFtpClient
         $this->server   = $server;
         $this->username = $username;
         $this->password = $password;
-
-        $this->sftp = new SFTP( $server, $port );
+        $this->port     = $port;
     }
 
     private function login()
@@ -71,6 +72,8 @@ class SFtpClient
      */
     public function uploadFile( string $fileName, string $content )
     {
+        define('NET_SFTP_LOGGING', SFTP::LOG_COMPLEX);
+        $this->sftp = new SFTP( $this->server, $this->port );
         if (!$this->login()){
             return [
                 'error' => 'true',
