@@ -37,7 +37,8 @@ class SFtpClient
      */
     public function uploadFile( string $fileName, string $content )
     {
-        define('NET_SFTP_LOGGING', SFTP::LOG_COMPLEX);
+        define('NET_SFTP_LOGGING', 2);
+        define('NET_SSH2_LOGGING', 2);
         $this->sftp = new SFTP( $this->server, $this->port );
         if (!$this->login()){
             return [
