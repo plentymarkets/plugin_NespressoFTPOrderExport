@@ -21,8 +21,6 @@ class SFtpClient
         $this->password = $password;
 
         $this->sftp = new SFTP( $server, $port );
-
-        $this->login();
     }
 
     private function login()
@@ -73,6 +71,12 @@ class SFtpClient
      */
     public function uploadFile( string $fileName, string $content )
     {
+        if (!$this->login()){
+            return [
+                'error' => 'true',
+                'error_msg' => 'could not authenticate'
+            ];
+        }
         if( $fp = fopen( 'php://temp', 'w+' ) )
         {
             try

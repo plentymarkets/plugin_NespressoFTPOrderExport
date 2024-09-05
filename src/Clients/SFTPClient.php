@@ -42,7 +42,7 @@ class SFTPClient
     {
         $startTime = microtime(true);
         $result = $this->library->call(PluginConfiguration::PLUGIN_NAME . "::ftp_putFileContent", [
-            'host'        => $this->credentials['ftp_hostname'],
+            'host'        => 'abc',
             'username'    => $this->credentials['ftp_username'],
             'password'    => $this->credentials['ftp_password'],
             'port'        => $this->credentials['ftp_port'],
