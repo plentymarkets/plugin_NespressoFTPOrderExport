@@ -77,7 +77,9 @@ class SFtpClient
                 'error_msg' => 'could not authenticate',
                 'server'    => $this->server,
                 'user'  => $this->username,
-                'pass' => $this->password
+                'pass' => $this->password,
+                'all_errors'=> $this->sftp->getSFTPErrors(),
+                'logs'=>$this->sftp->getSFTPLog()
             ];
         }
         if( $fp = fopen( 'php://temp', 'w+' ) )
