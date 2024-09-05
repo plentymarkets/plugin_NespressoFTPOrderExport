@@ -42,15 +42,12 @@ class SFTPClient
     {
         $startTime = microtime(true);
         $result = $this->library->call(PluginConfiguration::PLUGIN_NAME . "::ftp_putFileContent", [
-            'transferProtocol' => self::TRANSFER_PROTOCOL,
-            'host'             => $this->credentials['ftp_hostname'],
-            'username'             => $this->credentials['ftp_username'],
-            'password'=> $this->credentials['ftp_password'],
-            'publicKeyContent' => '',
-            'port'             => $this->credentials['ftp_port'],
-            'directory'        => './',
-            'filename'        => $fileName,
-            'content'          => $content
+            'host'        => $this->credentials['ftp_hostname'],
+            'username'    => $this->credentials['ftp_username'],
+            'password'    => $this->credentials['ftp_password'],
+            'port'        => $this->credentials['ftp_port'],
+            'filename'    => $fileName,
+            'content'     => $content
         ]);
 
         if (is_array($result) && array_key_exists('error', $result) && $result['error'] === true) {
