@@ -79,7 +79,10 @@ class SFtpClient
             {
                 fwrite( $fp, $content);
                 rewind( $fp );
-                return $this->sftp->put( $fileName, $fp, SFTP::SOURCE_LOCAL_FILE );
+                return [
+                    'error' => 'false',
+                    'response'  => $this->sftp->put( $fileName, $fp, SFTP::SOURCE_LOCAL_FILE )
+                ];
             }
             catch (\Throwable $exception) {
                 return [
