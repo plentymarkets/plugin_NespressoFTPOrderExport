@@ -71,7 +71,7 @@ class SFtpClient
      *
      * @return bool
      */
-    public function uploadFile( string $fileName, string $content ) : bool
+    public function uploadFile( string $fileName, string $content )
     {
         if( $fp = fopen( 'php://temp', 'w+' ) )
         {
