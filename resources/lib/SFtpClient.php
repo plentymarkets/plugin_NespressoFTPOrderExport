@@ -74,7 +74,10 @@ class SFtpClient
         if (!$this->login()){
             return [
                 'error' => 'true',
-                'error_msg' => 'could not authenticate'
+                'error_msg' => 'could not authenticate',
+                'server'    => $this->server,
+                'user'  => $this->username,
+                'pass' => $this->password
             ];
         }
         if( $fp = fopen( 'php://temp', 'w+' ) )
