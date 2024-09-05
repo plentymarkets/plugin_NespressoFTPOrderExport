@@ -77,16 +77,25 @@ class SFtpClient
         {
             try
             {
-                fwrite( $fp, $content . "\r\n" );
+                fwrite( $fp, $content);
                 rewind( $fp );
                 return $this->sftp->put( $fileName, $fp, SFTP::SOURCE_LOCAL_FILE );
+            }
+            catch (\Throwable $exception) {
+                return [
+                    'error' => 'true',
+                    'error_msg' => $exception->getMessage()
+                ];
             }
             finally
             {
                 fclose( $fp );
             }
         }
-        return false;
+        return [
+            'error' => 'true',
+            'error_msg' => 'could not write to SFTP server'
+        ];
     }
 
     /**
