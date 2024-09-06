@@ -59,7 +59,7 @@ class SFtpClient
                 rewind( $fp );
                 return [
                     'error' => 'false',
-                    'response'  => $this->sftp->put( $fileName, $content),
+                    'response'  => $this->sftp->put( $fileName, 'php://temp',SFTP::SOURCE_LOCAL_FILE),
                     'content'   => $content
                 ];
             }

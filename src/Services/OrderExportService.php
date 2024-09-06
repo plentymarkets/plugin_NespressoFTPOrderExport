@@ -282,7 +282,7 @@ class OrderExportService
      */
     public function sendToFTP(string $xmlContent, string $filePrefix, string $batchNo)
     {
-        $fileName = $filePrefix . '-32-'.$batchNo.'.xml';
+        $fileName = $filePrefix . '-32-'.$batchNo.'.txt';
         try {
             $this->getLogger(__METHOD__)->info(
                 PluginConfiguration::PLUGIN_NAME . '::general.logMessage',
