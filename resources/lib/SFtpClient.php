@@ -22,6 +22,8 @@ class SFtpClient
         $this->username = $username;
         $this->password = $password;
         $this->port     = $port;
+
+        $this->sftp = new SFTP( $this->server, $this->port );
     }
 
     private function login()
@@ -37,9 +39,6 @@ class SFtpClient
      */
     public function uploadFile( string $fileName, string $content )
     {
-        define('NET_SFTP_LOGGING', 2);
-        define('NET_SSH2_LOGGING', 2);
-        $this->sftp = new SFTP( $this->server, $this->port );
         if (!$this->login()){
             return [
                 'error' => 'true',
@@ -51,29 +50,24 @@ class SFtpClient
                 'logs'=>$this->sftp->getSFTPLog()
             ];
         }
-        if( $fp = fopen( 'php://temp', 'w+' ) )
+        try
         {
-            try
-            {
-                fwrite( $fp, $content);
-                rewind( $fp );
-                return [
-                    'error' => 'false',
-                    'response'  => $this->sftp->put( $fileName, 'php://temp',SFTP::SOURCE_LOCAL_FILE),
-                    'content'   => $content
-                ];
-            }
-            catch (\Throwable $exception) {
-                return [
-                    'error' => 'true',
-                    'error_msg' => $exception->getMessage()
-                ];
-            }
-            finally
-            {
-                fclose( $fp );
-            }
+            return [
+                'error'  => $this->sftp->put( $fileName, $content),
+                'content'   => $content
+            ];
         }
+        catch (\Throwable $exception) {
+            return [
+                'error' => 'true',
+                'error_msg' => $exception->getMessage()
+            ];
+        }
+        finally
+        {
+            fclose( $fp );
+        }
+
         return [
             'error' => 'true',
             'error_msg' => 'could not write to SFTP server'
