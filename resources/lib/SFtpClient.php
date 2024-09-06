@@ -1,6 +1,6 @@
 <?php
 
-use phpseclib\Net\SFTP;
+use phpseclib3\Net\SFTP;
 
 /**
  * Class FtpClient
