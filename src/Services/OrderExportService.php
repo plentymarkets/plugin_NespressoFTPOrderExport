@@ -4,6 +4,7 @@ namespace NespressoFTPOrderExport\Services;
 
 use Carbon\Carbon;
 use NespressoFTPOrderExport\Clients\SFTPClient;
+use NespressoFTPOrderExport\Clients\ClientForSFTP;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Models\Address;
 use NespressoFTPOrderExport\Models\ContactPreference;
@@ -34,7 +35,7 @@ class OrderExportService
     /**
      * @param SFTPClient $ftpClient
      */
-    public function __construct(SFTPClient $ftpClient)
+    public function __construct(ClientForSFTP $ftpClient)
     {
         $this->ftpClient       = $ftpClient;
     }
@@ -282,7 +283,7 @@ class OrderExportService
      */
     public function sendToFTP(string $xmlContent, string $filePrefix, string $batchNo)
     {
-        $fileName = $filePrefix . '-32-'.$batchNo.'.txt';
+        $fileName = $filePrefix . '-32-'.$batchNo.'.xml';
         try {
             $this->getLogger(__METHOD__)->info(
                 PluginConfiguration::PLUGIN_NAME . '::general.logMessage',
