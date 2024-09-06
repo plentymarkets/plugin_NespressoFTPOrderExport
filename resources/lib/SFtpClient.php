@@ -53,8 +53,8 @@ class SFtpClient
         try
         {
             return [
-                'error'  => $this->sftp->put( $fileName, $content),
-                'content'   => $content
+                'error'   => $this->sftp->put($fileName, $content),
+                'content' => $content
             ];
         }
         catch (\Throwable $exception) {
@@ -62,10 +62,6 @@ class SFtpClient
                 'error' => 'true',
                 'error_msg' => $exception->getMessage()
             ];
-        }
-        finally
-        {
-            fclose( $fp );
         }
 
         return [
