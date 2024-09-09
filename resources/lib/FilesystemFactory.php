@@ -1,10 +1,10 @@
 <?php
 
 use League\Flysystem\Filesystem;
-//use League\Flysystem\Sftp\SftpAdapter;
-use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
-use League\Flysystem\PhpseclibV3\SftpAdapter;
-use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
+use League\Flysystem\Sftp\SftpAdapter;
+//use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
+//use League\Flysystem\PhpseclibV3\SftpAdapter;
+//use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
 
 /**
  * Class SdkFilesystemFactory
@@ -16,16 +16,17 @@ class FilesystemFactory
      */
     public static function create()
     {
-        /*
+
         $adapter = new SftpAdapter([
             'host' => SdkRestApi::getParam('host'),
             'port' => 22,
             'username' => SdkRestApi::getParam('username'),
             'password' => SdkRestApi::getParam('password'),
             'root'     => '/',
-            'timeout' => 100
+            'timeout' => 100,
+            'directoryPerm' => 0755
         ]);
-        */
+        /*
         $adapter = new Filesystem(new SftpAdapter(
             new SftpConnectionProvider(
                 SdkRestApi::getParam('host'), // host (required)
@@ -52,9 +53,9 @@ class FilesystemFactory
                 ],
             ])
         ));
-
-        //return new Filesystem($adapter);
-        return $adapter;
+        */
+        return new Filesystem($adapter);
+        //return $adapter;
     }
 
 }
