@@ -1,7 +1,6 @@
 <?php
 
 require_once 'SdkFilesystemFactory.php';
-require_once 'CsvHelper.php';
 
 $sftpFS = SDKFilesystemFactory::create();
 $params = SdkRestApi::getParam('params', []);
