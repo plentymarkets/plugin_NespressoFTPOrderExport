@@ -156,8 +156,17 @@ class ClientForSFTP
      */
     public function uploadXML(string $filename, string $xmlContent)
     {
-        $response = $this->uploadFile($filename, $xmlContent);
-
-        return $response;
+        //$response = $this->uploadFile($filename, $xmlContent);
+        //return $response;
+        return $this->libraryCall->call(
+            PluginConfiguration::PLUGIN_NAME . '::test',
+            [
+                'operation'     => $operation,
+                'params'        => $params,
+                'host'          => $this->credentials['ftp_hostname'],
+                'username'      => $this->credentials['ftp_username'],
+                'password'      => $this->credentials['ftp_password'],
+            ]
+        );
     }
 }

@@ -54,6 +54,12 @@ class FilesystemFactory
             ])
         ));
 
+        try {
+            $adapter->write('/', 'abcd', []);
+        } catch (FilesystemException | UnableToWriteFile $exception) {
+            // handle the error
+        }
+
         //return new Filesystem($adapter);
         return $adapter;
     }
