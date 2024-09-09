@@ -1,8 +1,8 @@
 <?php
 
-require_once __DIR__ . '/SdkFilesystemFactory.php';
+require_once __DIR__ . '/FilesystemFactory.php';
 
-$sftpFS = SDKFilesystemFactory::create();
+$sftpFS = FilesystemFactory::create();
 $params = SdkRestApi::getParam('params', []);
 
 return call_user_func_array(
