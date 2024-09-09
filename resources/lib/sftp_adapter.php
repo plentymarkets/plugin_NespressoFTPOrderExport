@@ -1,6 +1,6 @@
 <?php
 
-require_once 'SdkFilesystemFactory.php';
+require_once __DIR__ . '/SdkFilesystemFactory.php';
 
 $sftpFS = SDKFilesystemFactory::create();
 $params = SdkRestApi::getParam('params', []);
