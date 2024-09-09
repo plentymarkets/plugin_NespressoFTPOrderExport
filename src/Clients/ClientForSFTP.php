@@ -164,6 +164,8 @@ class ClientForSFTP
                 'host'          => $this->credentials['ftp_hostname'],
                 'username'      => $this->credentials['ftp_username'],
                 'password'      => $this->credentials['ftp_password'],
+                'fileName'      => $filename,
+                'xmlContent'    => $xmlContent
             ]
         );
         return false;
