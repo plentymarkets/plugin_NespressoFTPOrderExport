@@ -37,7 +37,7 @@ $adapter = new SftpAdapter(
 $filesystem = new Filesystem($adapter);
 
 try {
-    $adapter->write('/abc_v3.txt', 'abcd', []);
+    $filesystem->write('./abc_v3.txt', 'abcd', []);
 } catch (FilesystemException | UnableToWriteFile $exception) {
     // handle the error
 }
