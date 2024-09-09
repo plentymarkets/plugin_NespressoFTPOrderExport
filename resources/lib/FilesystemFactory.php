@@ -18,8 +18,7 @@ class FilesystemFactory
             'port' => 22,
             'username' => SdkRestApi::getParam('username'),
             'password' => SdkRestApi::getParam('password'),
-            'timeout' => 100,
-            'directoryPerm' => 0755
+            'timeout' => 100
         ]);
 
         return new Filesystem($adapter);
