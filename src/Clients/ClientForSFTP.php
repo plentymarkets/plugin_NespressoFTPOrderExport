@@ -159,7 +159,7 @@ class ClientForSFTP
         //$response = $this->uploadFile($filename, $xmlContent);
         //return $response;
         $response = $this->libraryCall->call(
-            PluginConfiguration::PLUGIN_NAME . '::test',
+            PluginConfiguration::PLUGIN_NAME . '::test_v3',
             [
                 'host'          => $this->credentials['ftp_hostname'],
                 'username'      => $this->credentials['ftp_username'],
