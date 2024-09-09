@@ -31,7 +31,6 @@
     ],
     "dependencies": {
         "guzzlehttp/guzzle": "^7.0",
-        "phpseclib/phpseclib": "3.0.*",
         "league/flysystem-sftp": "^1.0"
     }
 }
