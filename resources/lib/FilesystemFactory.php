@@ -32,7 +32,7 @@ class FilesystemFactory
                 SdkRestApi::getParam('password'), // password (optional, default: null) set to null if privateKey is used
                 null, // private key (optional, default: null) can be used instead of password, set to null if password is set
                 null, // passphrase (optional, default: null), set to null if privateKey is not used or has no passphrase
-                SdkRestApi::getParam('port'), // port (optional, default: 22)
+                22, // port (optional, default: 22)
                 true, // use agent (optional, default: false)
                 30, // timeout (optional, default: 10)
                 10, // max tries (optional, default: 4)
