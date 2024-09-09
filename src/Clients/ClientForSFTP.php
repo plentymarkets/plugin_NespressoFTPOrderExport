@@ -156,6 +156,8 @@ class ClientForSFTP
      */
     public function uploadXML(string $filename, string $xmlContent)
     {
-        return $this->uploadFile($filename, $xmlContent);
+        $response = $this->uploadFile($filename, $xmlContent);
+
+        return $response;
     }
 }
