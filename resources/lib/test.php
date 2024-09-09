@@ -4,10 +4,10 @@ use League\Flysystem\Filesystem;
 
 
 $adapter = new SftpAdapter([
-    'host'          => SdkRestApi::getParam('host'),
+    'host'          => 'sftp.plentysystems.com',
     'port'          => 22,
-    'username'      => SdkRestApi::getParam('username'),
-    'password'      => SdkRestApi::getParam('password'),
+    'username'      => 'p68291_ftp',
+    'password'      => '53rKf8yw6xDeICcQ',
     'root'          => '/',
     'timeout'       => 30,
     'directoryPerm' => 0755,
