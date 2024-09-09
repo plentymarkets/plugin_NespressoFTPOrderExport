@@ -22,6 +22,7 @@ class FilesystemFactory
             'port' => 22,
             'username' => SdkRestApi::getParam('username'),
             'password' => SdkRestApi::getParam('password'),
+            'root'     => '/',
             'timeout' => 100
         ]);
         */
@@ -52,7 +53,8 @@ class FilesystemFactory
             ])
         ));
 
-        return new Filesystem($adapter);
+        //return new Filesystem($adapter);
+        return $adapter;
     }
 
 }
