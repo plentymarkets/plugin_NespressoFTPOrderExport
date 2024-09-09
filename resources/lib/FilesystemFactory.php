@@ -1,10 +1,10 @@
 <?php
 
 use League\Flysystem\Filesystem;
-use League\Flysystem\Sftp\SftpAdapter;
-//use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
-//use League\Flysystem\PhpseclibV3\SftpAdapter;
-//use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
+//use League\Flysystem\Sftp\SftpAdapter;
+use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
+use League\Flysystem\PhpseclibV3\SftpAdapter;
+use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
 
 /**
  * Class SdkFilesystemFactory
@@ -16,7 +16,7 @@ class FilesystemFactory
      */
     public static function create()
     {
-
+        /*
         $adapter = new SftpAdapter([
             'host' => SdkRestApi::getParam('host'),
             'port' => 22,
@@ -26,7 +26,7 @@ class FilesystemFactory
             'timeout' => 100,
             'directoryPerm' => 0755
         ]);
-        /*
+        */
         $adapter = new Filesystem(new SftpAdapter(
             new SftpConnectionProvider(
                 SdkRestApi::getParam('host'), // host (required)
@@ -41,7 +41,7 @@ class FilesystemFactory
                 null, // host fingerprint (optional, default: null),
                 null, // connectivity checker (must be an implementation of 'League\Flysystem\PhpseclibV2\ConnectivityChecker' to check if a connection can be established (optional, omit if you don't need some special handling for setting reliable connections)
             ),
-            '', // root path (required)
+            '/', // root path (required)
             PortableVisibilityConverter::fromArray([
                 'file' => [
                     'public' => 0640,
@@ -53,9 +53,9 @@ class FilesystemFactory
                 ],
             ])
         ));
-        */
-        return new Filesystem($adapter);
-        //return $adapter;
+
+        //return new Filesystem($adapter);
+        return $adapter;
     }
 
 }
