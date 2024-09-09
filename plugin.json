@@ -31,6 +31,6 @@
     ],
     "dependencies": {
         "guzzlehttp/guzzle": "^7.0",
-        "league/flysystem-sftp": "^1.0"
+        "league/flysystem-sftp-v3": "^3.0"
     }
 }
