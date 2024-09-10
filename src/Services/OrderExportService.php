@@ -181,8 +181,6 @@ class OrderExportService
         $record->order = $orderData;
 
         $record->saveRecord($order->id);
-
-        $this->sendDataToClient();
     }
 
     /**
@@ -237,8 +235,7 @@ class OrderExportService
      */
     public function generateXMLFromOrderData($exportList, $generationTime, $batchNo): string
     {
-        $resultedXML = '
-<?xml version="1.0" encoding="UTF-16" standalone="no" ?>
+        $resultedXML = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <import_batch version_number="1.0" xmlns="http://nesclub.nespresso.com/webservice/club/xsd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nesclub.nespresso.com/webservice/club/xsd/ http://nesclub.nespresso.com/webservice/club/xsd/">
   	<!-- HEADER STARTS HERE--> 
 	<batch_date_time>'.$generationTime.'</batch_date_time>
@@ -292,7 +289,17 @@ class OrderExportService
                     'fileName'=> $fileName
                 ]
             );
-            $this->ftpClient->uploadXML($fileName, $xmlContent);
+            $result = $this->ftpClient->uploadXML($fileName, $xmlContent);
+            if (is_array($result) && array_key_exists('error', $result) && $result['error'] === true) {
+                $this->getLogger(__METHOD__)
+                    ->error(PluginConfiguration::PLUGIN_NAME . '::globals.ftpFileUploadError',
+                        [
+                            'errorMsg'          => $result['error_msg'],
+                            'fileName'          => $fileName,
+                        ]
+                    );
+                return false;
+            }
         } catch (\Throwable $exception) {
             $this->getLogger(__METHOD__)->error(
                 PluginConfiguration::PLUGIN_NAME . '::error.writeFtpError',
@@ -367,8 +374,6 @@ class OrderExportService
             $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
             $batchNo
         )){
-            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.writeFtpError',
-                []);
             return false;
         }
 

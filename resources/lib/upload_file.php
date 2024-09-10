@@ -1,7 +1,6 @@
 <?php
 
 use League\Flysystem\Filesystem;
-//use League\Flysystem\Sftp\SftpAdapter;
 use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
 use League\Flysystem\PhpseclibV3\SftpAdapter;
 use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
@@ -39,6 +38,12 @@ $filesystem = new Filesystem($adapter);
 try {
     $filesystem->write('./' . SdkRestApi::getParam('fileName'),
         SdkRestApi::getParam('xmlContent'), []);
+    return [
+        'error' => false
+    ];
 } catch (FilesystemException | UnableToWriteFile $exception) {
-    // handle the error
+    return [
+        'error'     => true,
+        'error_msg' => $exception->getMessage()
+    ];
 }
