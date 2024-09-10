@@ -27,7 +27,8 @@
     "serviceProvider": "NespressoFTPOrderExport\\Providers\\PluginServiceProvider",
     "runOnBuild": [
         "NespressoFTPOrderExport\\Migrations\\CreateNespressoExportTable",
-        "NespressoFTPOrderExport\\Migrations\\CreateNespressoSettingsTable"
+        "NespressoFTPOrderExport\\Migrations\\CreateNespressoSettingsTable",
+        "NespressoFTPOrderExport\\Migrations\\UseTextInExportTable"
     ],
     "dependencies": {
         "guzzlehttp/guzzle": "^7.0",
