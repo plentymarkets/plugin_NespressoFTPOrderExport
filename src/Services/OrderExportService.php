@@ -154,7 +154,7 @@ class OrderExportService
             function ($date) {
                 return $date->typeId == OrderDateType::ORDER_ENTRY_AT;
             }
-        )->first()->date->timestamp;
+        )->first()->date->isoFormat("DD/MM/YYYY");
         $orderData->order_source = 'AMZ';
         $orderData->delivery_mode = 'VZ';
         $orderData->payment_mode = 'XA';
