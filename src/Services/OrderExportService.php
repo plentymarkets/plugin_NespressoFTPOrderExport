@@ -3,7 +3,6 @@
 namespace NespressoFTPOrderExport\Services;
 
 use Carbon\Carbon;
-use NespressoFTPOrderExport\Clients\SFTPClient;
 use NespressoFTPOrderExport\Clients\ClientForSFTP;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Models\Address;
@@ -28,12 +27,12 @@ class OrderExportService
     use Loggable;
 
     /**
-     * @var SFTPClient
+     * @var ClientForSFTP
      */
     private $ftpClient;
 
     /**
-     * @param SFTPClient $ftpClient
+     * @param ClientForSFTP $ftpClient
      */
     public function __construct(ClientForSFTP $ftpClient)
     {
@@ -64,16 +63,6 @@ class OrderExportService
             $deliveryAddress->address_line1 = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
             $deliveryAddress->address_line2 = '';
         }
-        /*
-        $deliveryAddress->address_line1 = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
-        $deliveryAddress->address_line2 = '';
-        if ($deliveryAddress->address_line1 === ''){
-            if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
-                $deliveryAddress->address_line1 = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-                $deliveryAddress->address_line2 = $order->deliveryAddress->address4;
-            }
-        }
-        */
         $deliveryAddress->post_code = $order->deliveryAddress->postalCode;
         $deliveryAddress->city = $order->deliveryAddress->town;
         $deliveryAddress->country = $order->deliveryAddress->country->isoCode2;
@@ -100,16 +89,6 @@ class OrderExportService
             $invoiceAddress->address_line1 = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
             $invoiceAddress->address_line2 = '';
         }
-        /*
-        $invoiceAddress->address_line1 = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
-        $invoiceAddress->address_line2 = '';
-        if ($invoiceAddress->address_line1 === ''){
-            if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
-                $invoiceAddress->address_line1 = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-                $invoiceAddress->address_line2 = $order->billingAddress->address4;
-            }
-        }
-        */
         $invoiceAddress->post_code = $order->billingAddress->postalCode;
         $invoiceAddress->city = $order->billingAddress->town;
         $invoiceAddress->country = $order->billingAddress->country->isoCode2;
