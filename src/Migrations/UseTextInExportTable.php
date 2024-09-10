@@ -2,20 +2,25 @@
 
 namespace NespressoFTPOrderExport\Migrations;
 
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\Builder;
+use Plenty\DataBase\Migrations\Migration;
 
 class UseTextInExportTable extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     *
+     * @param \Illuminate\Database\Schema\Builder $schema
+     */
+    protected function run(Builder $schema)
     {
-        Schema::table('plugin_nespresso_f_t_p_order_export__export_stack', function(Blueprint $table)
-        {
+        $schema->table('plugin_nespresso_f_t_p_order_export__export_stack', function (Blueprint $table) {
             $table->text('exportedData')->default('');
         });
     }
 
-    public function down()
+    protected function rollback(Builder $schema)
     {
     }
 }
