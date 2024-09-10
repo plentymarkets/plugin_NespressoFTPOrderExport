@@ -32,11 +32,6 @@ class Address
     /**
      * @var string
      */
-    public $sender_id;
-
-    /**
-     * @var string
-     */
     public $extra_name;
 
     /**
