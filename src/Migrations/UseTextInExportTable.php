@@ -13,7 +13,7 @@ class UseTextInExportTable extends Migration
      *
      * @param \Illuminate\Database\Schema\Builder $schema
      */
-    protected function run(Builder $schema)
+    public function run(Builder $schema)
     {
         $schema->table('plugin_nespresso_f_t_p_order_export__export_stack', function (Blueprint $table) {
             $table->text('exportedData')->default('');
