@@ -3,6 +3,7 @@
 namespace NespressoFTPOrderExport\Services;
 
 use Carbon\Carbon;
+use IO\Builder\Order\OrderItemType;
 use NespressoFTPOrderExport\Clients\ClientForSFTP;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Models\Address;
@@ -140,12 +141,14 @@ class OrderExportService
 
         $orderData->order_details = pluginApp(OrderDetails::class);
         foreach ($order->orderItems as $orderItem) {
-            $orderLine = pluginApp(OrderLine::class);
-            $orderLine->product_code = $orderItem->variation->number;
-            $orderLine->quantity = $orderItem->quantity;
-            $orderLine->serial_number = '';
+            if ($orderItem->typeId === OrderItemType::VARIATION) {
+                $orderLine = pluginApp(OrderLine::class);
+                $orderLine->product_code = $orderItem->variation->number;
+                $orderLine->quantity = $orderItem->quantity;
+                $orderLine->serial_number = '';
 
-            $orderData->order_details->order_lines[] = $orderLine;
+                $orderData->order_details->order_lines[] = $orderLine;
+            }
         }
 
         $record = pluginApp(Record::class);
