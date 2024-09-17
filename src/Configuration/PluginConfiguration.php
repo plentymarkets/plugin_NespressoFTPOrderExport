@@ -67,4 +67,16 @@ class PluginConfiguration
             'ftp_folderPath'   => $folderPath
         ];
     }
+
+    public function getPluginVariant(): string
+    {
+        $pluginVariant = $this->getConfigValue('pluginVariant');
+        switch ($pluginVariant){
+            case "0":
+            default:
+                return "DE";
+            case "1":
+                return "AT";
+        }
+    }
 }

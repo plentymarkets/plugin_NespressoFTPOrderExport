@@ -6,14 +6,6 @@ use Carbon\Carbon;
 use IO\Builder\Order\OrderItemType;
 use NespressoFTPOrderExport\Clients\ClientForSFTP;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
-use NespressoFTPOrderExport\Models\Address;
-use NespressoFTPOrderExport\Models\ContactPreference;
-use NespressoFTPOrderExport\Models\Customer;
-use NespressoFTPOrderExport\Models\OrderData;
-use NespressoFTPOrderExport\Models\OrderDetails;
-use NespressoFTPOrderExport\Models\OrderLine;
-use NespressoFTPOrderExport\Models\PrivacyPolicy;
-use NespressoFTPOrderExport\Models\Record;
 use NespressoFTPOrderExport\Models\TableRow;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
@@ -33,11 +25,20 @@ class OrderExportService
     private $ftpClient;
 
     /**
+     * @var PluginConfiguration
+     */
+    private $configRepository;
+
+    /**
      * @param ClientForSFTP $ftpClient
      */
-    public function __construct(ClientForSFTP $ftpClient)
+    public function __construct(
+        ClientForSFTP $ftpClient,
+        PluginConfiguration    $configRepository
+    )
     {
-        $this->ftpClient       = $ftpClient;
+        $this->ftpClient        = $ftpClient;
+        $this->configRepository = $configRepository;
     }
 
     /**
@@ -46,123 +47,170 @@ class OrderExportService
      */
     public function processOrder(Order $order)
     {
-        $deliveryAddress = pluginApp(Address::class);
+        $pluginVariant = $this->configRepository->getPluginVariant();
+
+        $deliveryAddress = [];
         if ($order->deliveryAddress->companyName != '') {
-            $deliveryAddress->company = $order->deliveryAddress->companyName;
+            $deliveryAddress['company'] = '1';
+            $deliveryAddress['name'] = $order->deliveryAddress->companyName;
+            $deliveryAddress['first_name'] = '';
+            $deliveryAddress['contact'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
         } else {
-            $deliveryAddress->company = '0';
+            $deliveryAddress['company'] = '0';
+            $deliveryAddress['name'] = $order->deliveryAddress->name3;
+            $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
+            $deliveryAddress['contact'] = '';
         }
-        $deliveryAddress->contact = '';
-        $deliveryAddress->name = $order->deliveryAddress->name3;
-        $deliveryAddress->first_name = $order->deliveryAddress->name2;
-        $deliveryAddress->civility = 5;
-        $deliveryAddress->extra_name = $order->deliveryAddress->name4;
+        $deliveryAddress['civility'] = 5;
+        $deliveryAddress['extra_name'] = $order->deliveryAddress->name4;
         if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
-            $deliveryAddress->address_line1 = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-            $deliveryAddress->address_line2 = $order->deliveryAddress->address4;
+            $deliveryAddress['address_line1'] = $order->deliveryAddress->packstationNo;
+            $deliveryAddress['address_line2'] = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
+            if ($deliveryAddress['address_line2'] === '') {
+                $deliveryAddress['address_line2'] = $order->deliveryAddress->companyName;
+            }
         } else {
-            $deliveryAddress->address_line1 = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
-            $deliveryAddress->address_line2 = '';
+            $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
+            $deliveryAddress['address_line2'] = '';
         }
-        $deliveryAddress->post_code = $order->deliveryAddress->postalCode;
-        $deliveryAddress->city = $order->deliveryAddress->town;
-        $deliveryAddress->country = $order->deliveryAddress->country->isoCode2;
-        $deliveryAddress->area1 = '';
-        $deliveryAddress->area2 = '';
-        $deliveryAddress->remark = '';
-        $deliveryAddress->language = $this->getOrderLanguage($order);
+        $deliveryAddress['post_code'] = $order->deliveryAddress->postalCode;
+        $deliveryAddress['city'] = $order->deliveryAddress->town;
+        $deliveryAddress['country'] = $order->deliveryAddress->country->isoCode2;
+        $deliveryAddress['area1'] = '';
+        $deliveryAddress['area2'] = '';
+        $deliveryAddress['remark'] = '';
 
-        $invoiceAddress = pluginApp(Address::class);
-        if ($order->billingAddress->companyName != '') {
-            $invoiceAddress->company = $order->billingAddress->companyName;
-        } else {
-            $invoiceAddress->company = '0';
+        $invoiceAddress = [];
+        $customer['address_different'] = ($order->deliveryAddress->id == $order->billingAddress->id);
+        if ($customer['address_different']) {
+            if ($order->billingAddress->companyName != '') {
+                $invoiceAddress['company'] = '1';
+                $invoiceAddress['name'] = $order->billingAddress->companyName;
+                $invoiceAddress['first_name'] = '';
+                $invoiceAddress['contact'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
+            } else {
+                $invoiceAddress['company'] = '0';
+                $invoiceAddress['name'] = $order->deliveryAddress->name3;
+                $invoiceAddress['first_name'] = $order->billingAddress->name2;
+                $invoiceAddress['contact'] = '';
+            }
+            $invoiceAddress['civility'] = 5;
+            $invoiceAddress['extra_name'] = '';
+
+            if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
+                $invoiceAddress['address_line1'] = $order->billingAddress->packstationNo;
+                $invoiceAddress['address_line2'] = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
+                if ($invoiceAddress['address_line2'] === '') {
+                    $invoiceAddress['address_line2'] = $order->billingAddress->companyName;
+                }
+            } else {
+                $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
+                $invoiceAddress['address_line2'] = '';
+            }
+            $invoiceAddress['post_code'] = $order->billingAddress->postalCode;
+            $invoiceAddress['city'] = $order->billingAddress->town;
+            $invoiceAddress['country'] = $order->billingAddress->country->isoCode2;
+            $invoiceAddress['area1'] = '';
+            $invoiceAddress['area2'] = '';
+            $invoiceAddress['remark'] = '';
         }
-        $invoiceAddress->contact = '';
-        $invoiceAddress->name = $order->deliveryAddress->name3;
-        $invoiceAddress->first_name = $order->billingAddress->name2;
-        $invoiceAddress->civility = 5;
-        $invoiceAddress->extra_name = '';
-        if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
-            $invoiceAddress->address_line1 = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-            $invoiceAddress->address_line2 = $order->billingAddress->address4;
-        } else {
-            $invoiceAddress->address_line1 = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
-            $invoiceAddress->address_line2 = '';
-        }
-        $invoiceAddress->post_code = $order->billingAddress->postalCode;
-        $invoiceAddress->city = $order->billingAddress->town;
-        $invoiceAddress->country = $order->billingAddress->country->isoCode2;
-        $invoiceAddress->area1 = '';
-        $invoiceAddress->area2 = '';
-        $invoiceAddress->remark = '';
-        $invoiceAddress->language = $this->getOrderLanguage($order);
+        $contactPreference = [];
+        $contactPreference['email'] = $order->billingAddress->email;
+        $contactPreference['mailing_authorization'] = 0;
+        $contactPreference['post_mailing_active'] = 0;
+        $contactPreference['contact_by_phone_allowed'] = 0;
+        $contactPreference['mobile_notification_active'] = 0;
 
-        $contactPreference = pluginApp(ContactPreference::class);
-        $contactPreference->email = $order->billingAddress->email;
-        $contactPreference->mailing_authorization = 0;
-        $contactPreference->post_mailing_active = 0;
-        $contactPreference->contact_by_phone_allowed = 0;
-        $contactPreference->mobile_notification_active = 0;
+        $privacyPolicy = [];
+        $privacyPolicy['terms_and_condition_accepted'] = 1;
+        $privacyPolicy['allow_use_satisfaction_research'] = 0;
+        $privacyPolicy['allow_personalized_management'] = 0;
+        $privacyPolicy['allow_use_of_personal_data_for_marketing'] = 0;
 
-        $privacyPolicy = pluginApp(PrivacyPolicy::class);
-        $privacyPolicy->terms_and_condition_accepted = 1;
-        $privacyPolicy->allow_use_satisfaction_research = 0;
-        $privacyPolicy->allow_personalized_management = 0;
-        $privacyPolicy->allow_use_of_personal_data_for_marketing = 0;
-
-        $customer = pluginApp(Customer::class);
-        $customer->delivery_address = $deliveryAddress;
-        $customer->state_inscription_number = '';
-        $customer->vat_number = '';
-        $customer->address_different = ($order->deliveryAddress->id == $order->billingAddress->id);
+        $customer = [];
+        $customer['delivery_address'] = $deliveryAddress;
+        $customer['state_inscription_number'] = '';
+        $customer['vat_number'] = '';
         if ($order->deliveryAddress->companyName != '') {
-            $customer->company = $order->deliveryAddress->companyName;
+            $customer['company'] = $order->deliveryAddress->companyName;
         } else {
-            $customer->company = '0';
+            $customer['company'] = '0';
         }
-        $customer->invoice_address = $invoiceAddress;
-        $customer->contact_preference = $contactPreference;
-        $customer->privacy_policy = $privacyPolicy;
-        $customer->input_user = '';
-        $customer->fiscal_receipt = 'true';
+        $customer['invoice_address'] = $invoiceAddress;
+        $customer['contact_preference'] = $contactPreference;
+        $customer['privacy_policy'] = $privacyPolicy;
+        $customer['input_user'] = '';
+        $customer['fiscal_receipt'] = 'true';
 
-        $orderData = pluginApp(OrderData::class);
-        $orderData->external_order_id = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
-        $orderData->movement_code = "3";
-        $orderData->order_date = $order->dates->filter(
+        $orderData = [];
+        $orderData['external_order_id'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+        $orderData['movement_code'] = "3";
+        $orderData['order_date'] = $order->dates->filter(
             function ($date) {
                 return $date->typeId == OrderDateType::ORDER_ENTRY_AT;
             }
         )->first()->date->isoFormat("DD/MM/YYYY");
-        $orderData->order_source = 'AMZ';
-        $orderData->delivery_mode = 'VZ';
-        $orderData->payment_mode = 'XA';
+        $orderData['order_source'] = 'AMZ';
+        $orderData['delivery_mode'] = 'VZ';
+        $orderData['payment_mode'] = 'XA';
 
-        $orderData->order_details = pluginApp(OrderDetails::class);
+        $orderData['order_details'] = [];
         foreach ($order->orderItems as $orderItem) {
             if ($orderItem->typeId === OrderItemType::VARIATION) {
-                $orderLine = pluginApp(OrderLine::class);
-                $orderLine->product_code = $orderItem->variation->number;
-                $orderLine->quantity = $orderItem->quantity;
-                $orderLine->serial_number = '';
+                $orderLine = [];
+                $orderLine['product_code'] = $orderItem->variation->number;
+                $orderLine['quantity'] = $orderItem->quantity;
+                $orderLine['serial_number'] = '';
 
-                $orderData->order_details->order_lines[] = $orderLine;
+                $orderData['order_details'][] = $orderLine;
             }
         }
 
-        $record = pluginApp(Record::class);
+        $record = [];
 
-        $record->record_remarks = "";
-        $record->external_ref = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
-        $record->member_number = "";
-        $record->address_changed = 1;
-        $record->order_source = "AMZ";
-        $record->channel = "32";
-        $record->customer = $customer;
-        $record->order = $orderData;
+        $record['record_remarks'] = "";
+        $record['external_ref'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+        $record['member_number'] = "";
+        $record['address_changed'] = 1;
+        $record['order_source'] = "AMZ";
+        $record['channel'] = "32";
+        $record['customer'] = $customer;
+        $record['order'] = $orderData;
 
-        $record->saveRecord($order->id);
+        $this->saveRecord($order->id, $record);
+    }
+
+    /**
+     * @param int $plentyOrderId
+     * @param array $record
+     * @return bool
+     */
+    public function saveRecord(int $plentyOrderId, array $record){
+
+        $exportData = [
+            'plentyOrderId'    => $plentyOrderId,
+            'exportedData'     => json_encode($record),
+            'savedAt'          => Carbon::now()->toDateTimeString(),
+            'sentdAt'          => '',
+        ];
+
+        /** @var ExportDataRepository $exportDataRepository */
+        $exportDataRepository = pluginApp(ExportDataRepository::class);
+        try {
+            if (!$exportDataRepository->orderExists($plentyOrderId)) {
+                /** @var TableRow $savedObject */
+                $savedObject = $exportDataRepository->save($exportData);
+                return true;
+            }
+            return false;
+        } catch (\Throwable $e) {
+            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.saveExportError',
+                [
+                    'message'     => $e->getMessage(),
+                    'exportData'  => $exportData
+                ]);
+        }
+        return false;
     }
 
     /**
