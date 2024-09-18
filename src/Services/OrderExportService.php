@@ -13,6 +13,7 @@ use Plenty\Modules\Account\Address\Models\AddressOption;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
+use Plenty\Modules\Order\RelationReference\Models\OrderRelationReference;
 use Plenty\Plugin\Log\Loggable;
 
 class OrderExportService
@@ -30,6 +31,11 @@ class OrderExportService
     private $configRepository;
 
     /**
+     * @var String
+     */
+    private $pluginVariant;
+
+    /**
      * @param ClientForSFTP $ftpClient
      */
     public function __construct(
@@ -39,6 +45,7 @@ class OrderExportService
     {
         $this->ftpClient        = $ftpClient;
         $this->configRepository = $configRepository;
+        $this->pluginVariant    = $this->configRepository->getPluginVariant();
     }
 
     /**
@@ -47,8 +54,6 @@ class OrderExportService
      */
     public function processOrder(Order $order)
     {
-        $pluginVariant = $this->configRepository->getPluginVariant();
-
         $deliveryAddress = [];
         if ($order->deliveryAddress->companyName != '') {
             $deliveryAddress['company'] = '1';
@@ -69,6 +74,7 @@ class OrderExportService
             if ($deliveryAddress['address_line2'] === '') {
                 $deliveryAddress['address_line2'] = $order->deliveryAddress->companyName;
             }
+            $deliveryAddress['address_line2'] = 'PACKSTATION ' . $deliveryAddress['address_line2'];
         } else {
             $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
             $deliveryAddress['address_line2'] = '';
@@ -103,6 +109,7 @@ class OrderExportService
                 if ($invoiceAddress['address_line2'] === '') {
                     $invoiceAddress['address_line2'] = $order->billingAddress->companyName;
                 }
+                $invoiceAddress['address_line2'] = 'PACKSTATION ' . $invoiceAddress['address_line2'];
             } else {
                 $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
                 $invoiceAddress['address_line2'] = '';
@@ -143,6 +150,7 @@ class OrderExportService
         $customer['fiscal_receipt'] = 'true';
 
         $orderData = [];
+        $orderData['client_id'] = $this->getCustomerId($order);
         $orderData['external_order_id'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
         $orderData['movement_code'] = "3";
         $orderData['order_date'] = $order->dates->filter(
@@ -178,6 +186,24 @@ class OrderExportService
         $record['order'] = $orderData;
 
         $this->saveRecord($order->id, $record);
+    }
+
+    /**
+     * @param Order $order
+     * @return null
+     */
+    public function getCustomerId(Order $order)
+    {
+        $relation = $order->relations
+            ->where('referenceType', OrderRelationReference::REFERENCE_TYPE_CONTACT)
+            ->where('relation', OrderRelationReference::RELATION_TYPE_RECEIVER)
+            ->first();
+
+        if ($relation !== null) {
+            return $relation->referenceId;
+        }
+
+        return -1;
     }
 
     /**
@@ -235,6 +261,9 @@ class OrderExportService
         $str = '';
 
         foreach ($array as $k => $v) {
+            if ($k === 'client_id'){
+                continue;
+            }
             if (is_array($v)) {
                 if (is_int($k)){
                     $str .= "<order_line>\n" . $this->arrayToXml($v) . "</order_line>\n";
@@ -274,6 +303,7 @@ class OrderExportService
 ';
 
         $totalQuantities = 0;
+        $totalCustomers = 0;
         $customerList = [];
 
         /** @var TableRow $order */
@@ -281,21 +311,26 @@ class OrderExportService
             $orderData = json_decode($order->exportedData, true);
             $resultedXML .= $this->arrayToXml(['record' => $orderData]);
 
-            foreach ($orderData['order']['order_details']['order_lines'] as $orderLine){
+            foreach ($orderData['order']['order_details'] as $orderLine){
                 $totalQuantities += $orderLine['quantity'];
             }
 
-            $currentCustomer = $orderData['customer']['company'];
-            if (!in_array($currentCustomer, $customerList)){
-                $customerList[] = $currentCustomer;
+            $currentCustomer = $orderData['order']['client_id'];
+            if ((int)$currentCustomer == -1){
+                $totalCustomers++;
+            } else {
+                if (!in_array($currentCustomer, $customerList)) {
+                    $customerList[] = $currentCustomer;
+                    $totalCustomers++;
+                }
             }
         }
 
         $resultedXML .= '
 <total_orders>'.count($exportList).'</total_orders> 
 <total_quantity>'.$totalQuantities.'</total_quantity> 
-<total_customers>'.count($customerList).'</total_customers> 
-<total_members>'.count($customerList).'</total_members> 
+<total_customers>'.$totalCustomers.'</total_customers> 
+<total_members>'.$totalCustomers.'</total_members> 
 </import_batch>
         ';
 

@@ -18,6 +18,7 @@ class NespressoFTPOrderExportRouteServiceProvider extends RouteServiceProvider
         $apiRouter->version(['v1'], ['namespace' => 'NespressoFTPOrderExport\Controllers', 'middleware' => 'oauth'],
             function ($apiRouter) {
                 $apiRouter->get('NespressoFTPOrderExport/test/', 'TestController@testMethod');
+                $apiRouter->get('NespressoFTPOrderExport/cleartable/', 'TestController@clearDataTable');
             }
         );
     }
