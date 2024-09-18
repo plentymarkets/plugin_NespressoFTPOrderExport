@@ -136,8 +136,8 @@ class OrderExportService
         $customer['delivery_address'] = $deliveryAddress;
         $customer['state_inscription_number'] = '';
         $customer['vat_number'] = '';
-        if ($order->deliveryAddress->companyName != '') {
-            $customer['company'] = $order->deliveryAddress->companyName;
+        if ($order->billingAddress->companyName != '') {
+            $customer['company'] = '1';
         } else {
             $customer['company'] = '0';
         }
