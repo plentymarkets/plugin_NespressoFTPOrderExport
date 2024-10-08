@@ -81,6 +81,16 @@ class OrderExportService
         if ($this->pluginVariant == 'DE') {
             $deliveryAddress['civility'] = 5;
             $deliveryAddress['extra_name'] = '';
+            if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
+                $deliveryAddress['address_line1'] = 'PACKSTATION ' . $order->deliveryAddress->packstationNo;
+                $deliveryAddress['address_line2'] = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
+                if ($deliveryAddress['address_line2'] === '') {
+                    $deliveryAddress['address_line2'] = $order->deliveryAddress->companyName;
+                }
+            } else {
+                $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
+                $deliveryAddress['address_line2'] = '';
+            }
         } else {
             if ($deliveryAddress['company']){
                 $deliveryAddress['civility'] = 3;
@@ -96,16 +106,15 @@ class OrderExportService
             } else {
                 $deliveryAddress['extra_name'] = '';
             }
-        }
-        if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
-            $deliveryAddress['address_line1'] = 'PACKSTATION ' . $order->deliveryAddress->packstationNo;
-            $deliveryAddress['address_line2'] = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-            if ($deliveryAddress['address_line2'] === '') {
-                $deliveryAddress['address_line2'] = $order->deliveryAddress->companyName;
-            }
-        } else {
             $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
-            $deliveryAddress['address_line2'] = '';
+            if (strlen($deliveryAddress['address_line1']) > 35){
+                $deliveryAddress['address_line2'] = substr(
+                    $deliveryAddress['address_line1'],
+                    35,
+                    strlen($deliveryAddress['address_line1']) - 35);
+            } else {
+                $deliveryAddress['address_line2'] = '';
+            }
         }
         $deliveryAddress['post_code'] = $order->deliveryAddress->postalCode;
         $deliveryAddress['city'] = $order->deliveryAddress->town;
@@ -145,6 +154,16 @@ class OrderExportService
             if ($this->pluginVariant == 'DE') {
                 $invoiceAddress['civility'] = 5;
                 $invoiceAddress['extra_name'] = '';
+                if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
+                    $invoiceAddress['address_line1'] = 'PACKSTATION ' . $order->billingAddress->packstationNo;
+                    $invoiceAddress['address_line2'] = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
+                    if ($invoiceAddress['address_line2'] === '') {
+                        $invoiceAddress['address_line2'] = $order->billingAddress->companyName;
+                    }
+                } else {
+                    $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
+                    $invoiceAddress['address_line2'] = '';
+                }
             } else {
                 if ($invoiceAddress['company']){
                     $invoiceAddress['civility'] = 3;
@@ -160,18 +179,18 @@ class OrderExportService
                 } else {
                     $invoiceAddress['extra_name'] = '';
                 }
+                $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
+                if (strlen($invoiceAddress['address_line1']) > 35){
+                    $invoiceAddress['address_line2'] = substr(
+                        $invoiceAddress['address_line1'],
+                        35,
+                        strlen($invoiceAddress['address_line1']) - 35);
+                } else {
+                    $invoiceAddress['address_line2'] = '';
+                }
             }
 
-            if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
-                $invoiceAddress['address_line1'] = 'PACKSTATION ' . $order->billingAddress->packstationNo;
-                $invoiceAddress['address_line2'] = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-                if ($invoiceAddress['address_line2'] === '') {
-                    $invoiceAddress['address_line2'] = $order->billingAddress->companyName;
-                }
-            } else {
-                $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
-                $invoiceAddress['address_line2'] = '';
-            }
+
             $invoiceAddress['post_code'] = $order->billingAddress->postalCode;
             $invoiceAddress['city'] = $order->billingAddress->town;
             $invoiceAddress['country'] = $order->billingAddress->country->isoCode2;
@@ -349,6 +368,17 @@ class OrderExportService
         return $settingsRepository->getBatchNumber();
     }
 
+    public function escapeValue($value)
+    {
+        $escaped = str_replace('&', '&amp;', $value);
+        $escaped = str_replace('<', '&lt;', $escaped);
+        $escaped = str_replace('>', '&gt;', $escaped);
+        $escaped = str_replace('"', '&quot;', $escaped);
+        $escaped = str_replace("'", '&apos;', $escaped);
+
+        return $escaped;
+    }
+
     /**
      * @param $array
      * @return string
@@ -380,7 +410,7 @@ class OrderExportService
                 if ((string)$v === ''){
                     $str .= "<$k />\n";
                 } else {
-                    $str .= "<$k>" . $v . "</$k>\n";
+                    $str .= "<$k>" . $this->escapeValue($v) . "</$k>\n";
                 }
             }
         }
