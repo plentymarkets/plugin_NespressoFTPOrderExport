@@ -54,10 +54,6 @@ class OrderExportService
      */
     public function processOrder(Order $order)
     {
-        $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.saveExportError',
-            [
-                'translate'     => $this->escapeValue('RAITEC Automation Control GmbH & Co')
-            ]);
         $deliveryAddress = [];
         if ($order->deliveryAddress->companyName != '') {
             if ($this->pluginVariant == 'DE') {
