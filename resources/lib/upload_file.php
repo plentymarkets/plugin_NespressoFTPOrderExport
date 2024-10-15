@@ -11,7 +11,7 @@ $adapter = new SftpAdapter(
         SdkRestApi::getParam('host'), // host (required)
         SdkRestApi::getParam('username'), // username (required)
         SdkRestApi::getParam('password'), // password (optional, default: null) set to null if privateKey is used
-        null, // private key (optional, default: null) can be used instead of password, set to null if password is set
+        SdkRestApi::getParam('privatekey'), // private key (optional, default: null) can be used instead of password, set to null if password is set
         null, // passphrase (optional, default: null), set to null if privateKey is not used or has no passphrase
         22, // port (optional, default: 22)
         false, // use agent (optional, default: false)
