@@ -52,19 +52,6 @@ class ClientForSFTP
      */
     public function uploadXML(string $filename, string $xmlContent)
     {
-        if ($this->configRepository->getPluginVariant() == 'AT') {
-            return $this->libraryCall->call(
-                PluginConfiguration::PLUGIN_NAME . '::upload_file',
-                [
-                    'host' => $this->credentials['ftp_hostname'],
-                    'username' => $this->credentials['ftp_username'],
-                    'password' => null,
-                    'privatekey' => $this->credentials['ftp_password'],
-                    'fileName' => $filename,
-                    'xmlContent' => $xmlContent
-                ]
-            );
-        }
         return $this->libraryCall->call(
             PluginConfiguration::PLUGIN_NAME . '::upload_file',
             [
