@@ -2,6 +2,8 @@
 
 namespace NespressoFTPOrderExport\Crons;
 
+use NespressoFTPOrderExport\Configuration\PluginConfiguration;
+use NespressoFTPOrderExport\Repositories\SettingRepository;
 use NespressoFTPOrderExport\Services\OrderExportService;
 use Plenty\Modules\Cron\Contracts\CronHandler;
 use Plenty\Plugin\Log\Loggable;
@@ -15,8 +17,19 @@ class SendDataCron extends CronHandler
      * @param OrderExportService $exportService
      * @return bool
      */
-    public function handle(OrderExportService $exportService)
+    public function handle(
+        OrderExportService  $exportService,
+        PluginConfiguration $configRepository,
+        SettingRepository   $settingsRepository
+    )
     {
-        return $exportService->sendDataToClient();
+        $cronInterval = $configRepository->getCronInterval();
+        $latestExecutionTime = $settingsRepository->getLatestCronExecutionTime();
+
+        if (($latestExecutionTime + $cronInterval * 60) <= microtime(true)) {
+            $result = $exportService->sendDataToClient();
+            $settingsRepository->setLatestCronExecutionTime();
+            return $result;
+        }
     }
 }

@@ -81,6 +81,32 @@ class SettingRepository implements SettingRepositoryContract
         return (string)$batch;
     }
 
+
+    /**
+     * @return int
+     * @throws ValidationException
+     */
+    public function getLatestCronExecutionTime(): int
+    {
+        $latestTime = $this->get('latest_cron_execution_time');
+
+        if ($latestTime === null){
+            $this->save('latest_cron_execution_time', microtime(true));
+            return 0;
+        }
+
+        return (int)$latestTime;
+    }
+
+    /**
+     * @return void
+     * @throws ValidationException
+     */
+    public function setLatestCronExecutionTime()
+    {
+        $this->save('latest_cron_execution_time', microtime(true));
+    }
+
     /**
      * @return void
      * @throws ValidationException

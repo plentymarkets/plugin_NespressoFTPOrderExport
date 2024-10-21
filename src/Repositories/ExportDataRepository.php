@@ -54,9 +54,14 @@ class ExportDataRepository implements ExportDataRepositoryContract
      */
     public function listUnsent(int $maxRows)
     {
+        if ($maxRows > 0) {
+            return $this->database->query(TableRow::class)
+                ->where('sentAt', '=', '')
+                ->limit($maxRows)
+                ->get();
+        }
         return $this->database->query(TableRow::class)
             ->where('sentAt', '=', '')
-            ->limit($maxRows)
             ->get();
     }
 

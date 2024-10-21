@@ -36,6 +36,11 @@ class OrderExportService
     private $pluginVariant;
 
     /**
+     * @var int
+     */
+    private $totalOrdersPerBatch;
+
+    /**
      * @param ClientForSFTP $ftpClient
      */
     public function __construct(
@@ -43,9 +48,10 @@ class OrderExportService
         PluginConfiguration    $configRepository
     )
     {
-        $this->ftpClient        = $ftpClient;
-        $this->configRepository = $configRepository;
-        $this->pluginVariant    = $this->configRepository->getPluginVariant();
+        $this->ftpClient            = $ftpClient;
+        $this->configRepository     = $configRepository;
+        $this->pluginVariant        = $this->configRepository->getPluginVariant();
+        $this->totalOrdersPerBatch  = $this->configRepository->getTotalOrdersPerBatch();
     }
 
     /**
@@ -556,7 +562,7 @@ class OrderExportService
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
-            $exportList = $exportDataRepository->listUnsent(50);
+            $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch);
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
                 [

@@ -50,13 +50,13 @@
         },
         "batchCount": {
           "type": "inputText",
-          "required": true,
+          "required": false,
           "label": "Config.batchCount",
           "options": {}
         },
         "cronInterval": {
           "type": "inputText",
-          "required": true,
+          "required": false,
           "label": "Config.cronInterval",
           "options": {}
         }
