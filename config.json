@@ -30,12 +30,6 @@
             "isPassword": true
           }
         },
-        "folderpath": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.folderPath",
-          "options": {}
-        },
         "pluginVariant": {
           "type": "selectBox",
           "required": false,
@@ -53,6 +47,18 @@
               }
             ]
           }
+        },
+        "batchCount": {
+          "type": "inputText",
+          "required": true,
+          "label": "Config.batchCount",
+          "options": {}
+        },
+        "cronInterval": {
+          "type": "inputText",
+          "required": true,
+          "label": "Config.cronInterval",
+          "options": {}
         }
       }
     }
