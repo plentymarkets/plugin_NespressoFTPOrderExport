@@ -75,7 +75,6 @@ class PluginConfiguration
                     'ftp_password'     => $ftpPassword,
                     'ftp_port'         => $ftpPort,
                 ]);
-
             
             return [
                 'error' => true
