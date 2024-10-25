@@ -132,7 +132,7 @@ class OrderExportService
         }
 
         $invoiceAddress = [];
-        $customer['address_different'] = ($order->deliveryAddress->id == $order->billingAddress->id);
+        $customer['address_different'] = ($order->deliveryAddress->id != $order->billingAddress->id);
         if ($customer['address_different']) {
             if ($order->billingAddress->companyName != '') {
                 if ($this->pluginVariant == 'DE') {
@@ -233,7 +233,7 @@ class OrderExportService
         $customer = [];
         if ($this->pluginVariant == 'AT') {
             $customer['category_1'] = '27';
-            $customer['invoicing_condition'] = '0';
+            $customer['invoicing_condition'] = 'O';
         }
         $customer['delivery_address'] = $deliveryAddress;
         if ($this->pluginVariant == 'DE') {

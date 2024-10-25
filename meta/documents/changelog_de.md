@@ -1,3 +1,10 @@
+# Release Notes
+
+## v1.0.8 (2024-10-25)
+
+### Fix
+- fixed one field and a condition
+
 ## v1.0.7 (2024-10-22)
 
 ### Update

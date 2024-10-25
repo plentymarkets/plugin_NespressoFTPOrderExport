@@ -48,8 +48,8 @@ class PluginServiceProvider extends ServiceProvider
             'NespressoFTPOrderExport',
             ProcedureEntry::EVENT_TYPE_ORDER,
             [
-                'de' => ' NespressoFTPOrderExport [DE]',
-                'en' => ' NespressoFTPOrderExport [EN]'
+                'de' => ' NespressoFTPOrderExport',
+                'en' => ' NespressoFTPOrderExport'
             ],
             '\NespressoFTPOrderExport\Procedures\ExportProcedure@run'
         );
