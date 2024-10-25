@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.0.9 (2024-10-25)
+
+### Uodate
+- changed payment type for AT
+
 ## v1.0.8 (2024-10-25)
 
 ### Fix

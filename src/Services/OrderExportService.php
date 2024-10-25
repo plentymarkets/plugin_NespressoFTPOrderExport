@@ -270,10 +270,11 @@ class OrderExportService
         $orderData['order_source'] = 'AMZ';
         if ($this->pluginVariant == 'DE') {
             $orderData['delivery_mode'] = 'VZ';
+            $orderData['payment_mode'] = 'XA';
         } else {
             $orderData['delivery_mode'] = 'GP';
+            $orderData['payment_mode'] = 'AM';
         }
-        $orderData['payment_mode'] = 'XA';
         if ($this->pluginVariant == 'AT') {
             $orderData['force_stock'] = 'GW3';
             $orderData['order_description'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
