@@ -125,10 +125,12 @@ class OrderExportService
         $deliveryAddress['post_code'] = $order->deliveryAddress->postalCode;
         $deliveryAddress['city'] = $order->deliveryAddress->town;
         $deliveryAddress['country'] = $order->deliveryAddress->country->isoCode2;
-        $deliveryAddress['area1'] = '';
         if ($this->pluginVariant == 'DE') {
+            $deliveryAddress['area1'] = '';
             $deliveryAddress['area2'] = '';
             $deliveryAddress['remark'] = '';
+        } else {
+            $deliveryAddress['area1'] = $order->deliveryAddress->country->isoCode2;
         }
 
         $invoiceAddress = [];
@@ -200,10 +202,12 @@ class OrderExportService
             $invoiceAddress['post_code'] = $order->billingAddress->postalCode;
             $invoiceAddress['city'] = $order->billingAddress->town;
             $invoiceAddress['country'] = $order->billingAddress->country->isoCode2;
-            $invoiceAddress['area1'] = '';
             if ($this->pluginVariant == 'DE') {
+                $invoiceAddress['area1'] = '';
                 $invoiceAddress['area2'] = '';
                 $invoiceAddress['remark'] = '';
+            } else {
+                $invoiceAddress['area1'] = $order->billingAddress->country->isoCode2;
             }
         }
         $contactPreference = [];

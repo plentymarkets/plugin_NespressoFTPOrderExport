@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.0 (2024-10-25)
+
+### Uodate
+- use AT for area1
+
 ## v1.0.9 (2024-10-25)
 
 ### Uodate
