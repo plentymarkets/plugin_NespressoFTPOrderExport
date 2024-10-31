@@ -98,15 +98,7 @@ class OrderExportService
                 $deliveryAddress['address_line2'] = '';
             }
         } else {
-            if ($deliveryAddress['company']){
-                $deliveryAddress['civility'] = 3;
-            } else {
-                if ($order->deliveryAddress->gender === 'male') {
-                    $deliveryAddress['civility'] = 2;
-                } else {
-                    $deliveryAddress['civility'] = 1;
-                }
-            }
+            $deliveryAddress['civility'] = 10;
             if ($order->deliveryAddress->companyName != '') {
                 $deliveryAddress['extra_name'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
             } else {
@@ -173,15 +165,7 @@ class OrderExportService
                     $invoiceAddress['address_line2'] = '';
                 }
             } else {
-                if ($invoiceAddress['company']){
-                    $invoiceAddress['civility'] = 3;
-                } else {
-                    if ($order->billingAddress->gender === 'male') {
-                        $invoiceAddress['civility'] = 2;
-                    } else {
-                        $invoiceAddress['civility'] = 1;
-                    }
-                }
+                $invoiceAddress['civility'] = 10;
                 if ($order->billingAddress->companyName != '') {
                     $invoiceAddress['extra_name'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
                 } else {

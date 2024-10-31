@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.1 (2024-10-31)
+
+### Update
+- civility for AT was updated
+
 ## v1.1.0 (2024-10-25)
 
 ### Uodate
