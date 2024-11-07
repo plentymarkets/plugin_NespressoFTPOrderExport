@@ -300,6 +300,50 @@ class OrderExportService
         $record['customer'] = $customer;
         $record['order'] = $orderData;
 
+        if ($this->pluginVariant == 'AT') {
+            //apply maximum number of characters
+            $maxNumberList = [
+                [
+                    'field' => 'name',
+                    'limit' => 40
+                ],
+                [
+                    'field' => 'first_name',
+                    'limit' => 35
+                ],
+                [
+                    'field' => 'extra_name',
+                    'limit' => 70
+                ],
+                [
+                    'field' => 'address_line1',
+                    'limit' => 35
+                ],
+                [
+                    'field' => 'address_line2',
+                    'limit' => 35
+                ],
+                [
+                    'field' => 'city',
+                    'limit' => 35
+                ],
+                [
+                    'field' => 'post_code',
+                    'limit' => 8
+                ]
+            ];
+            foreach ($maxNumberList as $maxNumber){
+                if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
+                    $record['customer']['delivery_address'][$maxNumber['field']] =
+                        substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
+                }
+                if (strlen($record['customer']['invoice_address'][$maxNumber['field']]) > $maxNumber['limit']){
+                    $record['customer']['invoice_address'][$maxNumber['field']] =
+                        substr($record['customer']['invoice_address'][$maxNumber['field']], 0, $maxNumber['limit']);
+                }
+            }
+        }
+
         $this->saveRecord($order->id, $record);
     }
 
@@ -564,9 +608,15 @@ class OrderExportService
             return false;
         }
 
+        $settingsRepository = pluginApp(SettingRepository::class);
+
         $thisTime = Carbon::now();
         $generationTime = $thisTime->toDateTimeString();
         $batchNo = $this->getBatchNumber();
+        if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
+            $batchNo = "2001";
+            $settingsRepository->incrementBatchNumber();
+        }
         $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo);
         if (!$this->sendToFTP(
             $xmlContent,
@@ -576,7 +626,6 @@ class OrderExportService
             return false;
         }
 
-        $settingsRepository = pluginApp(SettingRepository::class);
         $settingsRepository->incrementBatchNumber();
 
         $this->markRowsAsSent($exportList, $generationTime);

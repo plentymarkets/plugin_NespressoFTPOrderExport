@@ -1,5 +1,11 @@
 # Release Notes
 
+## v1.1.2 (2024-11-07)
+
+### Update
+- max number of chars is required for a few fields in AT version
+- batch number 2000 needs to be skipped for AT
+
 ## v1.1.1 (2024-10-31)
 
 ### Update
