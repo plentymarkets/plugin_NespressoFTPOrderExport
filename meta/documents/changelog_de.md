@@ -3,43 +3,43 @@
 ## v1.1.2 (2024-11-07)
 
 ### Update
-- max number of chars is required for a few fields in AT version
-- batch number 2000 needs to be skipped for AT
+- Die maximale Anzahl an Zeichen ist in AT-Version für einige Felder erforderlich.
+- Die Chargennummer 2000 muss für AT übersprungen werden.
 
 ## v1.1.1 (2024-10-31)
 
 ### Update
-- civility for AT was updated
+- Die Anredeformen für AT wurden aktualisiert.
 
 ## v1.1.0 (2024-10-25)
 
-### Uodate
-- use AT for area1
+### Update
+- AT für area1 verwenden
 
 ## v1.0.9 (2024-10-25)
 
-### Uodate
-- changed payment type for AT
+### Update
+- Zahlungsart für AT geändert
 
 ## v1.0.8 (2024-10-25)
 
 ### Fix
-- fixed one field and a condition
+- Fix für ein Feld und eine Bedingung
 
 ## v1.0.7 (2024-10-22)
 
 ### Update
-- plugin configuration allows the user to specify how many orders will be sent in a batch
-- plugin configuration allows the user to specify the interval between 2 cron executions
-- the export procedure was modified in order to fix Nespresso AT requirements
+- Die Plugin-Konfiguration erlaubt dem Nutzer zu bestimmen, wie viele Aufträge in einer Sendung verschickt werden.
+- Die Plugin-Konfiguration erlaubt dem Nutzer, das Intervall zwischen 2 Cron-Ausführungen zu bestimmen.
+- Die Vorgehensweise des Exports wurde geändert, um Anforderungen von Nespresso AT zu erfüllen.
 
 ## v1.0.1 (2024-09-30)
 
 ### Update
-- the plugin was extended in order to be used by Nespresso DE and Nespresso AT
+- Das Plugin wurde erweitert, um von Nespresso DE und Nespresso AT verwendet werden zu können.
 
 ## v1.0.0 (2024-08-16)
 
 ### Plugin release
-- the plugin was released
+- Das Plugin wurde veröffentlicht.
 
