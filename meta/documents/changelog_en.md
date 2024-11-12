@@ -13,12 +13,12 @@
 
 ## v1.1.0 (2024-10-25)
 
-### Uodate
+### Update
 - use AT for area1
 
 ## v1.0.9 (2024-10-25)
 
-### Uodate
+### Update
 - changed payment type for AT
 
 ## v1.0.8 (2024-10-25)
