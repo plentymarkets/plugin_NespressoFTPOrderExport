@@ -253,6 +253,7 @@ class OrderExportService
             )->first()->date->isoFormat("DD/MM/YYYY");
         } else {
             $orderData['external_order_id'] = $order->id;
+            $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
             $orderData['movement_code'] = "2010";
         }
         $orderData['order_source'] = 'AMZ';

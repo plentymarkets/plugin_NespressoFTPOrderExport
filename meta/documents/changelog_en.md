@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.3 (2024-11-13)
+
+### Update
+- A new field was added for NespressoAT (third_reference)
+
 ## v1.1.2 (2024-11-07)
 
 ### Update
