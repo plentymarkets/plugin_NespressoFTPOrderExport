@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.4 (2025-01-10)
+
+### Update
+- The post code for NespressoAT will contain only numbers. All other characters will be removed. 
+
 ## v1.1.3 (2024-11-13)
 
 ### Update

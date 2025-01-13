@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.4 (2025-01-10)
+
+### Update
+- Die Postleitzahl für NespressoAT besteht nur aus Zahlen. Alle anderen Zeichen werden entfernt.
+
 ## v1.1.3 (2024-11-13)
 
 ### Update

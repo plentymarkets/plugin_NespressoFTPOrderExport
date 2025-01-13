@@ -115,6 +115,9 @@ class OrderExportService
             }
         }
         $deliveryAddress['post_code'] = $order->deliveryAddress->postalCode;
+        if ($this->pluginVariant == 'AT') {
+            $deliveryAddress['post_code'] = preg_replace("/[^0-9]/", "", $deliveryAddress['post_code'] );
+        }
         $deliveryAddress['city'] = $order->deliveryAddress->town;
         $deliveryAddress['country'] = $order->deliveryAddress->country->isoCode2;
         if ($this->pluginVariant == 'DE') {
@@ -184,6 +187,9 @@ class OrderExportService
 
 
             $invoiceAddress['post_code'] = $order->billingAddress->postalCode;
+            if ($this->pluginVariant == 'AT') {
+                $invoiceAddress['post_code'] = preg_replace("/[^0-9]/", "", $invoiceAddress['post_code'] );
+            }
             $invoiceAddress['city'] = $order->billingAddress->town;
             $invoiceAddress['country'] = $order->billingAddress->country->isoCode2;
             if ($this->pluginVariant == 'DE') {
