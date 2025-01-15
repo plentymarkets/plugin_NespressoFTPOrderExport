@@ -87,7 +87,8 @@ class PluginConfiguration
             'ftp_hostname'     => $ftpHost,
             'ftp_username'     => $ftpUser,
             'ftp_password'     => $ftpPassword,
-            'ftp_port'         => $ftpPort
+            'ftp_port'         => $ftpPort,
+            'ftp_folderPath'   => $ftpFolderPath,
         ];
     }
 
