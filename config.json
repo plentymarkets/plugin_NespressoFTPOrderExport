@@ -30,6 +30,12 @@
             "isPassword": true
           }
         },
+        "folderPath": {
+          "type": "inputText",
+          "required": true,
+          "label": "Config.folderPath",
+          "options": {}
+        },
         "pluginVariant": {
           "type": "selectBox",
           "required": false,
