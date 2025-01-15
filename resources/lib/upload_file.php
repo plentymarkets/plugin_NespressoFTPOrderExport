@@ -44,9 +44,7 @@ try {
     $filesystem->write($folderPath . SdkRestApi::getParam('fileName'),
         SdkRestApi::getParam('xmlContent'), []);
     return [
-        'error' => false,
-        'folderPath' => $folderPath,
-        'fromRestApi' => SdkRestApi::getParam('folderPath')
+        'error' => false
     ];
 } catch (FilesystemException | UnableToWriteFile $exception) {
     return [

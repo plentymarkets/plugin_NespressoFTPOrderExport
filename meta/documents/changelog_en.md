@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.5 (2025-01-15)
+
+### Update
+- Folderpath was added to plugin configuration
+  
 ## v1.1.4 (2025-01-10)
 
 ### Update

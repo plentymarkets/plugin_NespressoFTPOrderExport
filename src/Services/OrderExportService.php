@@ -550,12 +550,6 @@ class OrderExportService
                     );
                 return false;
             }
-            $this->getLogger(__METHOD__)
-                ->error(PluginConfiguration::PLUGIN_NAME . '::globals.ftpFileUploadError',
-                    [
-                        'path'          => $result['folderPath']
-                    ]
-                );
         } catch (\Throwable $exception) {
             $this->getLogger(__METHOD__)->error(
                 PluginConfiguration::PLUGIN_NAME . '::error.writeFtpError',
