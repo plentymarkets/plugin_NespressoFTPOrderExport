@@ -58,6 +58,7 @@ class ClientForSFTP
                 'host' => $this->credentials['ftp_hostname'],
                 'username' => $this->credentials['ftp_username'],
                 'password' => $this->credentials['ftp_password'],
+                'folderPath' => $this->credentials['ftp_folderPath'],
                 'privatekey' => null,
                 'fileName' => $filename,
                 'xmlContent' => $xmlContent

@@ -35,8 +35,13 @@ $adapter = new SftpAdapter(
 
 $filesystem = new Filesystem($adapter);
 
+$folderPath = './';
+if (SdkRestApi::getParam('folderPath') !== ''){
+    $folderPath .= SdkRestApi::getParam('folderPath') . '/';
+}
+
 try {
-    $filesystem->write('./' . SdkRestApi::getParam('fileName'),
+    $filesystem->write($folderPath . SdkRestApi::getParam('fileName'),
         SdkRestApi::getParam('xmlContent'), []);
     return [
         'error' => false

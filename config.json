@@ -32,7 +32,7 @@
         },
         "folderPath": {
           "type": "inputText",
-          "required": true,
+          "required": false,
           "label": "Config.folderPath",
           "options": {}
         },
