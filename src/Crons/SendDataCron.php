@@ -23,13 +23,13 @@ class SendDataCron extends CronHandler
         SettingRepository   $settingsRepository
     )
     {
-        $cronInterval = $configRepository->getCronInterval();
-        $latestExecutionTime = $settingsRepository->getLatestCronExecutionTime();
+//        $cronInterval = $configRepository->getCronInterval();
+//        $latestExecutionTime = $settingsRepository->getLatestCronExecutionTime();
 
-        if (($latestExecutionTime + $cronInterval * 60) <= microtime(true)) {
+//        if (($latestExecutionTime + $cronInterval * 60) <= microtime(true)) {
             $result = $exportService->sendDataToClient();
             $settingsRepository->setLatestCronExecutionTime();
             return $result;
         }
-    }
+//    }
 }

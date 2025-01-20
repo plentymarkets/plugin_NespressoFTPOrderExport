@@ -28,6 +28,13 @@ class ExportProcedure
         /** @var Order $order */
         $order = $eventTriggered->getOrder();
 
+        $this->getLogger(__METHOD__)
+            ->addReference('orderId', $order->id)
+            ->report('general.logMessage', [
+                'message'       => 'Start processing',
+                'orderId'       => $order->id
+            ]);
+
         /** @var AuthHelper $authHelper */
         $authHelper = pluginApp(AuthHelper::class);
 
@@ -40,11 +47,6 @@ class ExportProcedure
                     ->error('Exception', $e->getMessage());
             }
 
-            $this->getLogger('return order processed')
-                ->addReference('orderId', $order->id)
-                ->debug(PluginConfiguration::PLUGIN_NAME . 'general.returnOrderExecuted', [
-                    'message'         => 'Return executed'
-                ]);
 
             return 0;
         });

@@ -10,6 +10,7 @@ use NespressoFTPOrderExport\Models\TableRow;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
 use Plenty\Modules\Account\Address\Models\AddressOption;
+use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
@@ -41,17 +42,24 @@ class OrderExportService
     private $totalOrdersPerBatch;
 
     /**
+     * @var OrderRepositoryContract
+     */
+   private $orderRepository;
+
+    /**
      * @param ClientForSFTP $ftpClient
      */
     public function __construct(
-        ClientForSFTP $ftpClient,
-        PluginConfiguration    $configRepository
+        ClientForSFTP           $ftpClient,
+        PluginConfiguration     $configRepository,
+        OrderRepositoryContract $orderRepository
     )
     {
         $this->ftpClient            = $ftpClient;
         $this->configRepository     = $configRepository;
         $this->pluginVariant        = $this->configRepository->getPluginVariant();
         $this->totalOrdersPerBatch  = $this->configRepository->getTotalOrdersPerBatch();
+        $this->orderRepository      = $orderRepository;
     }
 
     /**
@@ -391,7 +399,11 @@ class OrderExportService
         try {
             if (!$exportDataRepository->orderExists($plentyOrderId)) {
                 /** @var TableRow $savedObject */
-                $savedObject = $exportDataRepository->save($exportData);
+                $exportDataRepository->save($exportData);
+                $statusOfProcessedOrder = $this->configRepository->getProcessedOrderStatus();
+                if ($statusOfProcessedOrder != ''){
+                    $this->orderRepository->updateOrder(['statusId' => (int)$statusOfProcessedOrder], $plentyOrderId);
+                }
                 return true;
             }
             return false;

@@ -103,4 +103,13 @@ class PluginConfiguration
                 return "AT";
         }
     }
+
+    public function getProcessedOrderStatus(): string
+    {
+        $orderStatus = $this->getConfigValue('processedStatus');
+        if (!is_null($orderStatus) && ((int)$orderStatus > 0)){
+            return $orderStatus;
+        }
+        return '';
+    }
 }
