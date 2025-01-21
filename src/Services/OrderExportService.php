@@ -3,7 +3,6 @@
 namespace NespressoFTPOrderExport\Services;
 
 use Carbon\Carbon;
-use IO\Builder\Order\OrderItemType;
 use NespressoFTPOrderExport\Clients\ClientForSFTP;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Models\TableRow;
@@ -13,6 +12,7 @@ use Plenty\Modules\Account\Address\Models\AddressOption;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
+use Plenty\Modules\Order\Models\OrderItemType;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
 use Plenty\Modules\Order\RelationReference\Models\OrderRelationReference;
 use Plenty\Plugin\Log\Loggable;
@@ -136,8 +136,10 @@ class OrderExportService
             $deliveryAddress['area1'] = $order->deliveryAddress->country->isoCode2;
         }
 
+        $customer = [];
+
         $invoiceAddress = [];
-        $customer['address_different'] = ($order->deliveryAddress->id != $order->billingAddress->id);
+        $customer['address_different'] = (int)($order->deliveryAddress->id != $order->billingAddress->id);
         if ($customer['address_different']) {
             if ($order->billingAddress->companyName != '') {
                 if ($this->pluginVariant == 'DE') {
@@ -232,7 +234,6 @@ class OrderExportService
         $privacyPolicy['allow_personalized_management'] = 0;
         $privacyPolicy['allow_use_of_personal_data_for_marketing'] = 0;
 
-        $customer = [];
         if ($this->pluginVariant == 'AT') {
             $customer['category_1'] = '27';
             $customer['invoicing_condition'] = 'O';
@@ -285,7 +286,7 @@ class OrderExportService
 
         $orderData['order_details'] = [];
         foreach ($order->orderItems as $orderItem) {
-            if ($orderItem->typeId === OrderItemType::VARIATION) {
+            if ($orderItem->typeId === OrderItemType::TYPE_VARIATION) {
                 $orderLine = [];
                 $orderLine['product_code'] = $orderItem->variation->number;
                 $orderLine['quantity'] = $orderItem->quantity;
@@ -454,6 +455,10 @@ class OrderExportService
                 continue;
             }
             if (is_array($v)) {
+                if (count($v) == 0){
+                    $str .= "<$k />\n";
+                    continue;
+                }
                 if (is_int($k)){
                     $str .= "<order_line>\n" . $this->arrayToXml($v) . "</order_line>\n";
                 } else {
