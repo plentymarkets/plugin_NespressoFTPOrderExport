@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.7 (2025-01-21)
+
+### Update
+- Two names replaced for NespressoAT
+
 ## v1.1.6 (2025-01-21)
 
 ### Update
