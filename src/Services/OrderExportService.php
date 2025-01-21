@@ -77,7 +77,7 @@ class OrderExportService
                 $deliveryAddress['contact'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
             } else {
                 $deliveryAddress['company'] = 1;
-                $deliveryAddress['name'] = $order->deliveryAddress->name1;
+                $deliveryAddress['name'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
                 $deliveryAddress['first_name'] = '';
             }
         } else {
@@ -108,7 +108,7 @@ class OrderExportService
         } else {
             $deliveryAddress['civility'] = 10;
             if ($order->deliveryAddress->companyName != '') {
-                $deliveryAddress['extra_name'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
+                $deliveryAddress['extra_name'] = $order->deliveryAddress->name1;
             } else {
                 $deliveryAddress['extra_name'] = '';
             }
