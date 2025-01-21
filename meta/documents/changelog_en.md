@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.6 (2025-01-21)
+
+### Update
+- Status used when an order was successfully processed
+
 ## v1.1.5 (2025-01-15)
 
 ### Update
