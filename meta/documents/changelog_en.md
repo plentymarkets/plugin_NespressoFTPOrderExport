@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.8 (2025-01-23)
+
+### Fix
+- Fix order status change.
+
 ## v1.1.7 (2025-01-21)
 
 ### Update

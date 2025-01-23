@@ -403,7 +403,7 @@ class OrderExportService
                 $exportDataRepository->save($exportData);
                 $statusOfProcessedOrder = $this->configRepository->getProcessedOrderStatus();
                 if ($statusOfProcessedOrder != ''){
-                    $this->orderRepository->updateOrder(['statusId' => (int)$statusOfProcessedOrder], $plentyOrderId);
+                    $this->orderRepository->updateOrder(['statusId' => $statusOfProcessedOrder], $plentyOrderId);
                 }
                 return true;
             }
