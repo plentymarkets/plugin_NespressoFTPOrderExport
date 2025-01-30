@@ -30,7 +30,7 @@ class ExportProcedure
 
         $this->getLogger(__METHOD__)
             ->addReference('orderId', $order->id)
-            ->report('general.logMessage', [
+            ->report(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
                 'message'       => 'Start processing',
                 'orderId'       => $order->id
             ]);
@@ -44,9 +44,15 @@ class ExportProcedure
             } catch (Throwable $e) {
                 $this->getLogger(__METHOD__)
                     ->addReference('orderId', $order->id)
-                    ->error('Exception', $e->getMessage());
+                    ->error(PluginConfiguration::PLUGIN_NAME . '::error.exceptionMessage', $e->getMessage());
             }
 
+            $this->getLogger(__METHOD__)
+                ->addReference('orderId', $order->id)
+                ->report(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
+                    'message'       => 'End processing',
+                    'orderId'       => $order->id
+                ]);
 
             return 0;
         });
