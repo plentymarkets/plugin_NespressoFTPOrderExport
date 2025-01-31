@@ -395,21 +395,36 @@ class OrderExportService
             'sentdAt'          => '',
         ];
 
+        $this->getLogger(__METHOD__)
+            ->addReference('orderId', $plentyOrderId)
+            ->report(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', $exportData);
+
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
             if (!$exportDataRepository->orderExists($plentyOrderId)) {
                 /** @var TableRow $savedObject */
-                $exportDataRepository->save($exportData);
+                $result = $exportDataRepository->save($exportData);
+                $this->getLogger(__METHOD__)
+                    ->addReference('orderId', $plentyOrderId)
+                    ->report(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
+                        'message'   => 'Saved to export stack',
+                        'result'    => $result
+                    ]);
                 $statusOfProcessedOrder = $this->configRepository->getProcessedOrderStatus();
                 if ($statusOfProcessedOrder != ''){
                     $this->orderRepository->updateOrder(['statusId' => $statusOfProcessedOrder], $plentyOrderId);
                 }
                 return true;
             }
+            $this->getLogger(__METHOD__)
+                ->addReference('orderId', $plentyOrderId)
+                ->report(PluginConfiguration::PLUGIN_NAME . '::error.orderExists', $exportData);
             return false;
         } catch (\Throwable $e) {
-            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.saveExportError',
+            $this->getLogger(__METHOD__)
+                ->addReference('orderId', $plentyOrderId)
+                ->error(PluginConfiguration::PLUGIN_NAME . '::error.saveExportError',
                 [
                     'message'     => $e->getMessage(),
                     'exportData'  => $exportData
