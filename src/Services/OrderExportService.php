@@ -404,12 +404,12 @@ class OrderExportService
         try {
             if (!$exportDataRepository->orderExists($plentyOrderId)) {
                 /** @var TableRow $savedObject */
-                $result = $exportDataRepository->save($exportData);
+                $exportDataRepository->save($exportData);
                 $this->getLogger(__METHOD__)
                     ->addReference('orderId', $plentyOrderId)
                     ->report(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
-                        'message'   => 'Saved to export stack',
-                        'result'    => $result
+                        'message'           => 'Saved to export stack',
+                        'check_order_exists'=> $exportDataRepository->orderExists($plentyOrderId)
                     ]);
                 $statusOfProcessedOrder = $this->configRepository->getProcessedOrderStatus();
                 if ($statusOfProcessedOrder != ''){

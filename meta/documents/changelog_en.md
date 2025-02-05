@@ -1,6 +1,6 @@
 # Release Notes
 
-## v1.1.10 (2025-01-31)
+## v1.1.11 (2025-02-05)
 
 ### Update
 - Update log messages.
