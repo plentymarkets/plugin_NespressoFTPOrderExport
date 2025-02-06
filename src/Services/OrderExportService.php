@@ -407,7 +407,7 @@ class OrderExportService
                 $exportDataRepository->save($exportData);
                 $this->getLogger(__METHOD__)
                     ->addReference('orderId', $plentyOrderId)
-                    ->report(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
+                    ->debug(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
                         'message'           => 'Saved to export stack',
                         'check_order_exists'=> $exportDataRepository->orderExists($plentyOrderId)
                     ]);
