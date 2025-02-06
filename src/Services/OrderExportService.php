@@ -408,16 +408,9 @@ class OrderExportService
                 $orderExists = $exportDataRepository->orderExists($plentyOrderId);
                 $this->getLogger(__METHOD__)
                     ->addReference('orderId', $plentyOrderId)
-                    ->error(PluginConfiguration::PLUGIN_NAME . '::error.saveExportError',
-                        [
-                            'message'     => 'Saved to export stack',
-                            'exportData'  => $orderExists
-                        ]);
-                $this->getLogger(__METHOD__)
-                    ->addReference('orderId', $plentyOrderId)
                     ->debug(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
                         'message'           => 'Saved to export stack',
-                        'check_order_exists'=> $orderExists
+                        'check_order_exists'=> '-'
                     ]);
                 $statusOfProcessedOrder = $this->configRepository->getProcessedOrderStatus();
                 if ($statusOfProcessedOrder != ''){
