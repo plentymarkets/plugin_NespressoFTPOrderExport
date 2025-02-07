@@ -395,10 +395,6 @@ class OrderExportService
             'sentdAt'          => '',
         ];
 
-        $this->getLogger(__METHOD__)
-            ->addReference('orderId', $plentyOrderId)
-            ->report(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', $exportData);
-
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
