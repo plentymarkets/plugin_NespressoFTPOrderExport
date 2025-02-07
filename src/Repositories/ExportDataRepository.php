@@ -88,6 +88,7 @@ class ExportDataRepository implements ExportDataRepositoryContract
     public function deleteOldRecords(string $dateLimit) : void
     {
         $this->database->query(TableRow::class)
+            ->where('sentAt', '!=', '')
             ->where('sentAt', '<', $dateLimit)
             ->delete();
     }
