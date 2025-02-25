@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.12 (2025-02-24)
+
+### Update
+- We changed the way of calculating totals in XML format (only for Nespresso DE).
+
 ## v1.1.11 (2025-02-05)
 
 ### Update

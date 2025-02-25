@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.1.12 (2025-02-24)
+
+### Update
+- Die Methode zur Berechnung von Summen im XML-Format wurde geändert (gilt nur für Nespresso DE).
+
 ## v1.1.11 (2025-02-05)
 
 ### Update

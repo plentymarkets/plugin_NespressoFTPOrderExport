@@ -531,7 +531,7 @@ class OrderExportService
         }
 
         $totalQuantities = 0;
-        $totalCustomers = 0;
+        $totalCustomers = 0; //removed from totals in version 1.1.12
         $customerList = [];
 
         /** @var TableRow $order */
@@ -557,8 +557,8 @@ class OrderExportService
             $resultedXML .= '
 <total_orders>' . count($exportList) . '</total_orders> 
 <total_quantity>' . $totalQuantities . '</total_quantity> 
-<total_customers>' . $totalCustomers . '</total_customers> 
-<total_members>' . $totalCustomers . '</total_members>';
+<total_customers>' . count($exportList) . '</total_customers> 
+<total_members>' . count($exportList) . '</total_members>';
         }
         $resultedXML .= "\n</import_batch>";
 
