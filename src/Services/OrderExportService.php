@@ -316,8 +316,8 @@ class OrderExportService
         $record['customer'] = $customer;
         $record['order'] = $orderData;
 
+        //apply maximum number of characters
         if ($this->pluginVariant == 'AT') {
-            //apply maximum number of characters
             $maxNumberList = [
                 [
                     'field' => 'name',
@@ -348,15 +348,34 @@ class OrderExportService
                     'limit' => 8
                 ]
             ];
-            foreach ($maxNumberList as $maxNumber){
-                if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
-                    $record['customer']['delivery_address'][$maxNumber['field']] =
-                        substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
-                }
-                if (strlen($record['customer']['invoice_address'][$maxNumber['field']]) > $maxNumber['limit']){
-                    $record['customer']['invoice_address'][$maxNumber['field']] =
-                        substr($record['customer']['invoice_address'][$maxNumber['field']], 0, $maxNumber['limit']);
-                }
+        } else {
+            $maxNumberList = [
+                [
+                    'field' => 'name',
+                    'limit' => 18
+                ],
+                [
+                    'field' => 'first_name',
+                    'limit' => 17
+                ],
+                [
+                    'field' => 'address_line1',
+                    'limit' => 35
+                ],
+                [
+                    'field' => 'post_code',
+                    'limit' => 5
+                ]
+            ];
+        }
+        foreach ($maxNumberList as $maxNumber){
+            if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
+                $record['customer']['delivery_address'][$maxNumber['field']] =
+                    substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
+            }
+            if (strlen($record['customer']['invoice_address'][$maxNumber['field']]) > $maxNumber['limit']){
+                $record['customer']['invoice_address'][$maxNumber['field']] =
+                    substr($record['customer']['invoice_address'][$maxNumber['field']], 0, $maxNumber['limit']);
             }
         }
 
