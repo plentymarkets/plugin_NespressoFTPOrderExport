@@ -69,6 +69,22 @@ class OrderExportService
     public function processOrder(Order $order)
     {
         $deliveryAddress = [];
+
+        //dismiss data in name1 if it contains wrong information
+        $orderDeliveryName1 = $order->deliveryAddress->name1;
+        $orderBillingName1 = $order->billingAddress->name1;
+        if ($this->pluginVariant == 'DE') {
+            $wrongContents = ['Stock', 'Etage', 'OG', 'Og', 'Zimmer', 'zimmer', 'Wg'];
+            foreach ($wrongContents as $wrongContent) {
+                if (strpos($order->deliveryAddress->name1, $wrongContent) !== false) {
+                    $orderDeliveryName1 = '';
+                }
+                if (strpos($order->billingAddress->name1, $wrongContent) !== false) {
+                    $orderBillingName1 = '';
+                }
+            }
+        }
+
         if ($order->deliveryAddress->companyName != '') {
             if ($this->pluginVariant == 'DE') {
                 $deliveryAddress['company'] = 1;
@@ -108,7 +124,7 @@ class OrderExportService
         } else {
             $deliveryAddress['civility'] = 10;
             if ($order->deliveryAddress->companyName != '') {
-                $deliveryAddress['extra_name'] = $order->deliveryAddress->name1;
+                $deliveryAddress['extra_name'] = $orderDeliveryName1;
             } else {
                 $deliveryAddress['extra_name'] = '';
             }
@@ -149,7 +165,7 @@ class OrderExportService
                     $invoiceAddress['contact'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
                 } else {
                     $invoiceAddress['company'] = '1';
-                    $invoiceAddress['name'] = $order->billingAddress->name1;
+                    $invoiceAddress['name'] = $orderBillingName1;
                     $invoiceAddress['first_name'] = '';
                 }
             } else {
@@ -238,6 +254,38 @@ class OrderExportService
             $customer['category_1'] = '27';
             $customer['invoicing_condition'] = 'O';
         }
+
+        //check for potential wrong field data in the delivery address
+        if ($this->pluginVariant == 'DE') {
+            if (is_numeric($order->deliveryAddress->address1)){
+                $deliveryAddress['address_line1'] = $orderDeliveryName1 . ' ' . $order->deliveryAddress->address1;
+            }
+            if (is_numeric($order->billingAddress->address1)){
+                $invoiceAddress['address_line1'] = $orderBillingName1 . ' ' . $order->billingAddress->address1;
+            }
+
+            if (preg_match('/\s\d/', $orderDeliveryName1)) {
+                $deliveryAddress['address_line1'] = $orderDeliveryName1;
+            }
+            if (preg_match('/\s\d/', $orderBillingName1)) {
+                $invoiceAddress['address_line1'] = $orderBillingName1;
+            }
+
+            $companyMarkers = ['GmbH', 'UG', 'AG', 'KG', 'OHG', 'GbR', 'SE', 'e.K.', 'eG', 'KGaA', 'GmbH & Co. KG',
+                             'UG & Co. KG', 'PartG', 'PartG mbB', 'Ltd.', 'Inc.', 'LLP', 'SARL', 'S.A.', 'S.P.A.',
+                             'mbH', 'Aktiengesellschaft'];
+            foreach ($companyMarkers as $companyMarker) {
+                if (strpos($order->deliveryAddress->name3, $companyMarker) !== false) {
+                    $deliveryAddress['address_line2'] = $order->deliveryAddress->name2 . ' ' . $orderDeliveryName1;
+                    $deliveryAddress['company'] = '1';
+                }
+                if (strpos($order->billingAddress->name3, $companyMarker) !== false) {
+                    $invoiceAddress['address_line2'] = $order->billingAddress->name2 . ' ' . $orderBillingName1;
+                    $invoiceAddress['company'] = '1';
+                }
+            }
+        }
+
         $customer['delivery_address'] = $deliveryAddress;
         if ($this->pluginVariant == 'DE') {
             $customer['state_inscription_number'] = '';
