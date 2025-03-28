@@ -85,10 +85,10 @@ class OrderExportService
             }
         }
 
-        if ($order->deliveryAddress->companyName != '') {
+        if ($orderDeliveryName1 != '') {
             if ($this->pluginVariant == 'DE') {
                 $deliveryAddress['company'] = 1;
-                $deliveryAddress['name'] = $order->deliveryAddress->companyName;
+                $deliveryAddress['name'] = $orderDeliveryName1;
                 $deliveryAddress['first_name'] = '';
                 $deliveryAddress['contact'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
             } else {
@@ -115,7 +115,7 @@ class OrderExportService
                 $deliveryAddress['address_line1'] = 'PACKSTATION ' . $order->deliveryAddress->packstationNo;
                 $deliveryAddress['address_line2'] = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
                 if ($deliveryAddress['address_line2'] === '') {
-                    $deliveryAddress['address_line2'] = $order->deliveryAddress->companyName;
+                    $deliveryAddress['address_line2'] = $orderDeliveryName1;
                 }
             } else {
                 $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
@@ -157,10 +157,10 @@ class OrderExportService
         $invoiceAddress = [];
         $customer['address_different'] = (int)($order->deliveryAddress->id != $order->billingAddress->id);
         if ($customer['address_different']) {
-            if ($order->billingAddress->companyName != '') {
+            if ($orderBillingName1 != '') {
                 if ($this->pluginVariant == 'DE') {
                     $invoiceAddress['company'] = '1';
-                    $invoiceAddress['name'] = $order->billingAddress->companyName;
+                    $invoiceAddress['name'] = $orderBillingName1;
                     $invoiceAddress['first_name'] = '';
                     $invoiceAddress['contact'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
                 } else {
@@ -187,7 +187,7 @@ class OrderExportService
                     $invoiceAddress['address_line1'] = 'PACKSTATION ' . $order->billingAddress->packstationNo;
                     $invoiceAddress['address_line2'] = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
                     if ($invoiceAddress['address_line2'] === '') {
-                        $invoiceAddress['address_line2'] = $order->billingAddress->companyName;
+                        $invoiceAddress['address_line2'] = $orderBillingName1;
                     }
                 } else {
                     $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
@@ -300,7 +300,7 @@ class OrderExportService
         if ($this->pluginVariant == 'DE') {
             $customer['state_inscription_number'] = '';
             $customer['vat_number'] = '';
-            if ($order->billingAddress->companyName != '') {
+            if ($orderBillingName1 != '') {
                 $customer['company'] = '1';
             } else {
                 $customer['company'] = '0';
