@@ -259,16 +259,24 @@ class OrderExportService
         if ($this->pluginVariant == 'DE') {
             if (is_numeric($order->deliveryAddress->address1)){
                 $deliveryAddress['address_line1'] = $orderDeliveryName1 . ' ' . $order->deliveryAddress->address1;
+                $deliveryAddress['name'] = '';
+                $deliveryAddress['company'] = '0';
             }
             if (is_numeric($order->billingAddress->address1)){
                 $invoiceAddress['address_line1'] = $orderBillingName1 . ' ' . $order->billingAddress->address1;
+                $invoiceAddress['name'] = '';
+                $invoiceAddress['company'] = '0';
             }
 
             if (preg_match('/\s\d/', $orderDeliveryName1)) {
                 $deliveryAddress['address_line1'] = $orderDeliveryName1;
+                $deliveryAddress['name'] = '';
+                $deliveryAddress['company'] = '0';
             }
             if (preg_match('/\s\d/', $orderBillingName1)) {
                 $invoiceAddress['address_line1'] = $orderBillingName1;
+                $invoiceAddress['name'] = '';
+                $invoiceAddress['company'] = '0';
             }
 
             $companyMarkers = ['GmbH', 'UG', 'AG', 'KG', 'OHG', 'GbR', 'SE', 'e.K.', 'eG', 'KGaA', 'GmbH & Co. KG',
@@ -276,12 +284,14 @@ class OrderExportService
                              'mbH', 'Aktiengesellschaft'];
             foreach ($companyMarkers as $companyMarker) {
                 if (strpos($order->deliveryAddress->name3, $companyMarker) !== false) {
-                    $deliveryAddress['address_line2'] = $order->deliveryAddress->name2 . ' ' . $orderDeliveryName1;
+                    $deliveryAddress['address_line2'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
                     $deliveryAddress['company'] = '1';
+                    $deliveryAddress['first_name'] = '';
                 }
                 if (strpos($order->billingAddress->name3, $companyMarker) !== false) {
-                    $invoiceAddress['address_line2'] = $order->billingAddress->name2 . ' ' . $orderBillingName1;
+                    $invoiceAddress['address_line2'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
                     $invoiceAddress['company'] = '1';
+                    $invoiceAddress['first_name'] = '';
                 }
             }
         }

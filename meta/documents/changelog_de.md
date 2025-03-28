@@ -1,6 +1,6 @@
 # Release Notes
 
-## v1.1.14 (2025-03-26)
+## v1.1.15 (2025-03-28)
 
 ### Update
 - Falscher Feldinhalt für Nespresso DE erkannt und behoben.
