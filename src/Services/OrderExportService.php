@@ -282,13 +282,15 @@ class OrderExportService
             $companyMarkers = ['GmbH', 'UG', 'AG', 'KG', 'OHG', 'GbR', 'SE', 'e.K.', 'eG', 'KGaA', 'GmbH & Co. KG',
                              'UG & Co. KG', 'PartG', 'PartG mbB', 'Ltd.', 'Inc.', 'LLP', 'SARL', 'S.A.', 'S.P.A.',
                              'mbH', 'Aktiengesellschaft'];
+            $deliveryName3Array = array_map('strtolower', explode(' ', $order->deliveryAddress->name3));
+            $billingName3Array  = array_map('strtolower', explode(' ', $order->billingAddress->name3));
             foreach ($companyMarkers as $companyMarker) {
-                if (strpos($order->deliveryAddress->name3, $companyMarker) !== false) {
+                if (in_array(strtolower($companyMarker), $deliveryName3Array)) {
                     $deliveryAddress['name'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
                     $deliveryAddress['company'] = '1';
                     $deliveryAddress['first_name'] = '';
                 }
-                if (strpos($order->billingAddress->name3, $companyMarker) !== false) {
+                if (in_array(strtolower($companyMarker), $billingName3Array)) {
                     $invoiceAddress['name'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
                     $invoiceAddress['company'] = '1';
                     $invoiceAddress['first_name'] = '';
