@@ -319,7 +319,7 @@ class OrderExportService
         $orderData = [];
         $orderData['client_id'] = $this->getCustomerId($order);
         if ($this->pluginVariant == 'DE') {
-            $orderData['external_order_id'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+            $orderData['external_order_id'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID) . '_' . $order->id;
             $orderData['movement_code'] = "3";
             $orderData['order_date'] = $order->dates->filter(
                 function ($date) {
@@ -362,8 +362,10 @@ class OrderExportService
 
         if ($this->pluginVariant == 'DE') {
             $record['record_remarks'] = "";
+            $record['external_ref'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID) . '_' . $order->id;
+        } else {
+            $record['external_ref'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
         }
-        $record['external_ref'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
         if ($this->pluginVariant == 'AT') {
             $record['identification_mode'] = "N";
         }
