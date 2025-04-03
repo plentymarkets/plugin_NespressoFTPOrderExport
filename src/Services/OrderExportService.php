@@ -427,6 +427,10 @@ class OrderExportService
                 [
                     'field' => 'post_code',
                     'limit' => 5
+                ],
+                [
+                    'field' => 'contact',
+                    'limit' => 35
                 ]
             ];
         }
