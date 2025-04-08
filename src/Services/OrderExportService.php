@@ -270,12 +270,16 @@ class OrderExportService
 
             if (preg_match('/\s\d/', $orderDeliveryName1)) {
                 $deliveryAddress['address_line1'] = $orderDeliveryName1;
-                $deliveryAddress['name'] = '';
+                $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
+                $deliveryAddress['name'] = $order->deliveryAddress->name3;
+                $deliveryAddress['contact'] = '';
                 $deliveryAddress['company'] = '0';
             }
             if (preg_match('/\s\d/', $orderBillingName1)) {
                 $invoiceAddress['address_line1'] = $orderBillingName1;
-                $invoiceAddress['name'] = '';
+                $invoiceAddress['first_name'] = $order->billingAddress->name2;
+                $invoiceAddress['name'] = $order->billingAddress->name3;
+                $invoiceAddress['contact'] = '';
                 $invoiceAddress['company'] = '0';
             }
 
