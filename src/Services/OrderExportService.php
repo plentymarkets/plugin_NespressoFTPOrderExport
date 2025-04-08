@@ -74,7 +74,7 @@ class OrderExportService
         $orderDeliveryName1 = $order->deliveryAddress->name1;
         $orderBillingName1 = $order->billingAddress->name1;
         if ($this->pluginVariant == 'DE') {
-            $wrongContents = ['Stock', 'Etage', 'OG', 'Og', 'Zimmer', 'zimmer', 'Wg'];
+            $wrongContents = ['Stock', 'Etage', 'OG', 'Og', 'Zimmer', 'zimmer', 'Wg', 'Floor', 'floor'];
             foreach ($wrongContents as $wrongContent) {
                 if (strpos($order->deliveryAddress->name1, $wrongContent) !== false) {
                     $orderDeliveryName1 = '';
@@ -82,6 +82,18 @@ class OrderExportService
                 if (strpos($order->billingAddress->name1, $wrongContent) !== false) {
                     $orderBillingName1 = '';
                 }
+            }
+            if (
+                (strpos(strtolower($order->deliveryAddress->name1), 'raum') !== false) &&
+                (preg_match('/\s\d/', $orderDeliveryName1))
+            ){
+                $orderDeliveryName1 = '';
+            }
+            if (
+                (strpos(strtolower($order->billingAddress->name1), 'raum') !== false) &&
+                (preg_match('/\s\d/', $orderBillingName1))
+            ){
+                $orderBillingName1 = '';
             }
         }
 
