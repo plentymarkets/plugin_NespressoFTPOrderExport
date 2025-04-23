@@ -269,17 +269,21 @@ class OrderExportService
 
         //check for potential wrong field data in the delivery address
         if ($this->pluginVariant == 'DE') {
-            if (is_numeric($order->deliveryAddress->address1)){
+            //number or number plus a single letter
+            if (preg_match('/\b\d+[a-zA-Z]?\b/', $order->deliveryAddress->address1)){
                 $deliveryAddress['address_line1'] = $orderDeliveryName1 . ' ' . $order->deliveryAddress->address1;
-                $deliveryAddress['name'] = '';
+                $deliveryAddress['name'] = $order->deliveryAddress->name3;
                 $deliveryAddress['company'] = '0';
+                $deliveryAddress['contact'] = '';
             }
-            if (is_numeric($order->billingAddress->address1)){
+            if (preg_match('/\b\d+[a-zA-Z]?\b/', $order->billingAddress->address1)){
                 $invoiceAddress['address_line1'] = $orderBillingName1 . ' ' . $order->billingAddress->address1;
-                $invoiceAddress['name'] = '';
+                $invoiceAddress['name'] = $order->billingAddress->name3;
                 $invoiceAddress['company'] = '0';
+                $invoiceAddress['contact'] = '';
             }
 
+            //space plus number
             if (preg_match('/\s\d/', $orderDeliveryName1)) {
                 $deliveryAddress['address_line1'] = $orderDeliveryName1;
                 $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
