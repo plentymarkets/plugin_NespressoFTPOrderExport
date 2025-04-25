@@ -124,11 +124,12 @@ class OrderExportService
             $deliveryAddress['civility'] = 5;
             $deliveryAddress['extra_name'] = '';
             if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
-                $deliveryAddress['address_line1'] = 'PACKSTATION ' . $order->deliveryAddress->packstationNo;
-                $deliveryAddress['address_line2'] = $order->deliveryAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-                if ($deliveryAddress['address_line2'] === '') {
-                    $deliveryAddress['address_line2'] = $orderDeliveryName1;
-                }
+                $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
+                $deliveryAddress['name'] = $order->deliveryAddress->name3;
+                $deliveryAddress['company'] = 0;
+                $deliveryAddress['contact'] = '';
+                $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->packstationNo;
+                $deliveryAddress['address_line2'] = $orderDeliveryName1;
             } else {
                 $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
                 $deliveryAddress['address_line2'] = '';
@@ -196,11 +197,12 @@ class OrderExportService
                 $invoiceAddress['civility'] = 5;
                 $invoiceAddress['extra_name'] = '';
                 if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
-                    $invoiceAddress['address_line1'] = 'PACKSTATION ' . $order->billingAddress->packstationNo;
-                    $invoiceAddress['address_line2'] = $order->billingAddress->options->where('typeId', AddressOption::TYPE_POST_NUMBER)->first();
-                    if ($invoiceAddress['address_line2'] === '') {
-                        $invoiceAddress['address_line2'] = $orderBillingName1;
-                    }
+                    $invoiceAddress['first_name'] = $order->billingAddress->name2;
+                    $invoiceAddress['name'] = $order->billingAddress->name3;
+                    $invoiceAddress['company'] = 0;
+                    $invoiceAddress['contact'] = '';
+                    $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->packstationNo;
+                    $invoiceAddress['address_line2'] = $orderBillingName1;
                 } else {
                     $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
                     $invoiceAddress['address_line2'] = '';
