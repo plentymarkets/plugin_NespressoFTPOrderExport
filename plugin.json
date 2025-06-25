@@ -28,7 +28,8 @@
     "runOnBuild": [
         "NespressoFTPOrderExport\\Migrations\\CreateNespressoExportTable",
         "NespressoFTPOrderExport\\Migrations\\CreateNespressoSettingsTable",
-        "NespressoFTPOrderExport\\Migrations\\UseTextInExportTable"
+        "NespressoFTPOrderExport\\Migrations\\UseTextInExportTable",
+        "NespressoFTPOrderExport\\Migrations\\AddB2BColumnToExportTable"
     ],
     "dependencies": {
         "guzzlehttp/guzzle": "^7.0",
