@@ -62,15 +62,20 @@ class SettingRepository implements SettingRepositoryContract
     }
 
     /**
+     * @param $isB2B
      * @return string
      * @throws ValidationException
      */
-    public function getBatchNumber(): string
+    public function getBatchNumber($isB2B): string
     {
-        $batch = $this->get('batch_number');
-
+        if (!$isB2B){
+            $batchField = 'batch_number';
+        } else {
+            $batchField = 'batch_number_b2b';
+        }
+        $batch = $this->get($batchField);
         if ($batch === null){
-            $this->save('batch_number', 1);
+            $this->save($batchField, 1);
             return '01';
         }
 
@@ -108,13 +113,19 @@ class SettingRepository implements SettingRepositoryContract
     }
 
     /**
+     * @param $isB2B
      * @return void
      * @throws ValidationException
      */
-    public function incrementBatchNumber(): void
+    public function incrementBatchNumber($isB2B): void
     {
-        $batch = $this->getBatchNumber();
+        $batch = $this->getBatchNumber($isB2B);
         $nextBatch = (int)$batch + 1;
-        $this->save('batch_number', $nextBatch);
+        if (!$isB2B){
+            $batchField = 'batch_number';
+        } else {
+            $batchField = 'batch_number_b2b';
+        }
+        $this->save($batchField, $nextBatch);
     }
 }
