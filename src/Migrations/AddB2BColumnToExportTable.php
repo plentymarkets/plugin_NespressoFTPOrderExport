@@ -14,7 +14,7 @@ class AddB2BColumnToExportTable
      */
     public function run(Builder $schema)
     {
-        $schema->table('plugin_mct__export_stack', function (Blueprint $table) {
+        $schema->table('plugin_nespresso_f_t_p_order_export__export_stack', function (Blueprint $table) {
             $table->boolean('isB2B')->default(false);
         });
     }
