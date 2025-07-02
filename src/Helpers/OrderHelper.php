@@ -27,7 +27,8 @@ class OrderHelper
             156681,
             156682,
             156683,
-            156684
+            156684,
+            1033
         ];
     }
     public function isB2B(Order $order)
