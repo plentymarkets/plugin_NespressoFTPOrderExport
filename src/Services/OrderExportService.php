@@ -416,10 +416,11 @@ class OrderExportService
             $record['member_number'] = "";
         }
         $record['address_changed'] = 1;
-        $record['order_source'] = "AMZ";
         if (($this->pluginVariant == 'DE') && $isB2B) {
+            $record['order_source'] = "AMB";
             $record['channel'] = "33";
         } else {
+            $record['order_source'] = "AMZ";
             $record['channel'] = "32";
         }
         $record['customer'] = $customer;
