@@ -23,12 +23,12 @@ class OrderHelper
     private function getProductCodesForB2B()
     {
         return [
-            156680,
-            156681,
-            156682,
-            156683,
-            156684,
-            1033
+            '156680',
+            '156681',
+            '156682',
+            '156683',
+            '156684',
+            '1033'
         ];
     }
     public function isB2B(Order $order)
