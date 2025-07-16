@@ -35,7 +35,7 @@ class OrderHelper
     {
         /** @var OrderItem $orderItem */
         foreach ($order->orderItems as $orderItem) {
-            if (in_array($orderItem->variation->id, $this->b2bProductCodes, true)) {
+            if (in_array($orderItem->variation->number, $this->b2bProductCodes, true)) {
                 return true;
             }
         }
