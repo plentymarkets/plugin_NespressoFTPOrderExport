@@ -30,9 +30,6 @@ class TestController extends Controller
         return true;
     }
 
-    /**
-     * @return mixed
-     */
     public function getB2BProductList()
     {
         /** @var SettingRepository $settingsRepository */
@@ -40,10 +37,6 @@ class TestController extends Controller
         return $settingsRepository->getB2BProductList();
     }
 
-    /**
-     * @param array $productArray
-     * @return void
-     */
     public function setB2BProductList(array $productArray)
     {
         /** @var SettingRepository $settingsRepository */
@@ -73,6 +66,7 @@ class TestController extends Controller
         $key = array_search($productCode, $productCodes);
         if ($key !== false) {
             unset($productCodes[$key]);
+            $productCodes = array_values($productCodes);
             $settingsRepository->setB2BProductList($productCodes);
         }
     }

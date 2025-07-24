@@ -129,20 +129,19 @@ class SettingRepository implements SettingRepositoryContract
         $this->save($batchField, $nextBatch);
     }
 
-    /**
-     * @param array $productArray
-     * @return void
-     */
     public function setB2BProductList(array $productArray)
     {
         $this->save('b2b_productList', json_encode($productArray));
     }
 
     /**
-     * @return mixed
+     * @return array|mixed
      */
     public function getB2BProductList()
     {
-        return json_decode($this->get('b2b_productList'), true);
+        $productList = $this->get('b2b_productList');
+        if ($productList !== '')
+            return json_decode($productList, true);
+        return [];
     }
 }
