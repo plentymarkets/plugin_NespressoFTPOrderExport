@@ -2,9 +2,9 @@
 
 namespace NespressoFTPOrderExport\Helpers;
 
+use NespressoFTPOrderExport\Repositories\SettingRepository;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Models\OrderItem;
-use Plenty\Modules\Order\Models\OrderItemType;
 
 class OrderHelper
 {
@@ -22,15 +22,11 @@ class OrderHelper
      */
     private function getProductCodesForB2B()
     {
-        return [
-            '156680',
-            '156681',
-            '156682',
-            '156683',
-            '156684',
-            '1033'
-        ];
+        /** @var SettingRepository $settingsRepository */
+        $settingsRepository = pluginApp(SettingRepository::class);
+        return $settingsRepository->getB2BProductList();
     }
+
     public function isB2B(Order $order)
     {
         /** @var OrderItem $orderItem */
