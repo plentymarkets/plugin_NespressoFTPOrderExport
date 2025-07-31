@@ -859,7 +859,7 @@ class OrderExportService
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
-            $exportDataRepository->deleteOldRecords(Carbon::now()->subDays(30)->toDateTimeString());
+            $exportDataRepository->deleteOldRecords(Carbon::now()->subDays(60)->toDateTimeString());
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.clearExportTableError',
                 [

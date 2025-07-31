@@ -6,8 +6,6 @@ use NespressoFTPOrderExport\Contracts\ExportDataRepositoryContract;
 use NespressoFTPOrderExport\Models\TableRow;
 use Plenty\Modules\Plugin\DataBase\Contracts\DataBase;
 
-use function Kelunik\Acme\Protocol\boolean;
-
 class ExportDataRepository implements ExportDataRepositoryContract
 {
     /**
