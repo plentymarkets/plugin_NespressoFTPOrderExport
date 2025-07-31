@@ -32,6 +32,7 @@ class ExportDataRepository implements ExportDataRepositoryContract
         $tableRow->exportedData     = (string)$data['exportedData'];
         $tableRow->savedAt          = (string)$data['savedAt'];
         $tableRow->sentAt           = (string)$data['sentAt'];
+        $tableRow->isB2B            = (bool)$data['isB2B'];
 
         return $this->database->save($tableRow);
     }
@@ -50,18 +51,22 @@ class ExportDataRepository implements ExportDataRepositoryContract
     }
 
     /**
+     * @param int $maxRows
+     * @param bool $isB2B
      * @return TableRow[]
      */
-    public function listUnsent(int $maxRows)
+    public function listUnsent(int $maxRows, bool $isB2B=false)
     {
         if ($maxRows > 0) {
             return $this->database->query(TableRow::class)
                 ->where('sentAt', '=', '')
+                ->where('isB2B', '=', $isB2B)
                 ->limit($maxRows)
                 ->get();
         }
         return $this->database->query(TableRow::class)
             ->where('sentAt', '=', '')
+            ->where('isB2B', '=', $isB2B)
             ->get();
     }
 

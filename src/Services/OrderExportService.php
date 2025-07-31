@@ -5,6 +5,7 @@ namespace NespressoFTPOrderExport\Services;
 use Carbon\Carbon;
 use NespressoFTPOrderExport\Clients\ClientForSFTP;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
+use NespressoFTPOrderExport\Helpers\OrderHelper;
 use NespressoFTPOrderExport\Models\TableRow;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
@@ -47,12 +48,18 @@ class OrderExportService
    private $orderRepository;
 
     /**
+     * @var OrderHelper
+     */
+   private $orderHelper;
+
+    /**
      * @param ClientForSFTP $ftpClient
      */
     public function __construct(
         ClientForSFTP           $ftpClient,
         PluginConfiguration     $configRepository,
-        OrderRepositoryContract $orderRepository
+        OrderRepositoryContract $orderRepository,
+        OrderHelper             $orderHelper
     )
     {
         $this->ftpClient            = $ftpClient;
@@ -60,6 +67,7 @@ class OrderExportService
         $this->pluginVariant        = $this->configRepository->getPluginVariant();
         $this->totalOrdersPerBatch  = $this->configRepository->getTotalOrdersPerBatch();
         $this->orderRepository      = $orderRepository;
+        $this->orderHelper          = $orderHelper;
     }
 
     /**
@@ -69,6 +77,7 @@ class OrderExportService
     public function processOrder(Order $order)
     {
         $deliveryAddress = [];
+        $isB2B = $this->orderHelper->isB2B($order);
 
         //dismiss data in name1 if it contains wrong information
         $orderDeliveryName1 = $order->deliveryAddress->name1;
@@ -342,7 +351,11 @@ class OrderExportService
         $orderData['client_id'] = $this->getCustomerId($order);
         if ($this->pluginVariant == 'DE') {
             $orderData['external_order_id'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID) . '_' . $order->id;
-            $orderData['movement_code'] = "3";
+            if ($isB2B){
+                $orderData['movement_code'] = "71";
+            } else {
+                $orderData['movement_code'] = "3";
+            }
             $orderData['order_date'] = $order->dates->filter(
                 function ($date) {
                     return $date->typeId == OrderDateType::ORDER_ENTRY_AT;
@@ -353,10 +366,18 @@ class OrderExportService
             $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
             $orderData['movement_code'] = "2010";
         }
-        $orderData['order_source'] = 'AMZ';
+        if (($this->pluginVariant == 'DE') && $isB2B) {
+            $orderData['order_source'] = 'AMB';
+        } else {
+            $orderData['order_source'] = 'AMZ';
+        }
         if ($this->pluginVariant == 'DE') {
             $orderData['delivery_mode'] = 'VZ';
-            $orderData['payment_mode'] = 'XA';
+            if ($isB2B) {
+                $orderData['payment_mode'] = 'XB';
+            } else {
+                $orderData['payment_mode'] = 'XA';
+            }
         } else {
             $orderData['delivery_mode'] = 'GP';
             $orderData['payment_mode'] = 'AM';
@@ -395,8 +416,13 @@ class OrderExportService
             $record['member_number'] = "";
         }
         $record['address_changed'] = 1;
-        $record['order_source'] = "AMZ";
-        $record['channel'] = "32";
+        if (($this->pluginVariant == 'DE') && $isB2B) {
+            $record['order_source'] = "AMB";
+            $record['channel'] = "33";
+        } else {
+            $record['order_source'] = "AMZ";
+            $record['channel'] = "32";
+        }
         $record['customer'] = $customer;
         $record['order'] = $orderData;
 
@@ -467,7 +493,7 @@ class OrderExportService
             }
         }
 
-        $this->saveRecord($order->id, $record);
+        $this->saveRecord($order->id, $record, $isB2B);
     }
 
     /**
@@ -493,13 +519,14 @@ class OrderExportService
      * @param array $record
      * @return bool
      */
-    public function saveRecord(int $plentyOrderId, array $record){
+    public function saveRecord(int $plentyOrderId, array $record, bool $isB2B){
 
         $exportData = [
             'plentyOrderId'    => $plentyOrderId,
             'exportedData'     => json_encode($record),
             'savedAt'          => Carbon::now()->toDateTimeString(),
             'sentdAt'          => '',
+            'isB2B'            => $isB2B
         ];
 
         /** @var ExportDataRepository $exportDataRepository */
@@ -554,10 +581,10 @@ class OrderExportService
     /**
      * @return string
      */
-    public function getBatchNumber(): string
+    public function getBatchNumber($isB2B): string
     {
         $settingsRepository = pluginApp(SettingRepository::class);
-        return $settingsRepository->getBatchNumber();
+        return $settingsRepository->getBatchNumber($isB2B);
     }
 
     public function escapeValue($value)
@@ -619,10 +646,14 @@ class OrderExportService
      * @param string $batchNo
      * @return string
      */
-    public function generateXMLFromOrderData($exportList, $generationTime, $batchNo): string
+    public function generateXMLFromOrderData($exportList, $generationTime, $batchNo, $isB2B): string
     {
         if ($this->pluginVariant == 'DE'){
-            $senderId = 89;
+            if ($isB2B){
+                $senderId = 90;
+            } else {
+                $senderId = 89;
+            }
         } else {
             $senderId = 86;
         }
@@ -769,12 +800,12 @@ class OrderExportService
 
         $thisTime = Carbon::now();
         $generationTime = $thisTime->toDateTimeString();
-        $batchNo = $this->getBatchNumber();
+        $batchNo = $this->getBatchNumber(false);
         if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
             $batchNo = "2001";
             $settingsRepository->incrementBatchNumber();
         }
-        $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo);
+        $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
         if (!$this->sendToFTP(
             $xmlContent,
             $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
@@ -784,9 +815,39 @@ class OrderExportService
         }
 
         $settingsRepository->incrementBatchNumber();
-
         $this->markRowsAsSent($exportList, $generationTime);
 
+        if ($this->pluginVariant == 'DE') {
+            //for Nespresso DE, we might have also B2B orders, which we sent separatelly
+            try {
+                $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch, true);
+            } catch (\Throwable $e) {
+                $this->getLogger(__METHOD__)->error(
+                    PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
+                    [
+                        'message' => $e->getMessage(),
+                    ]
+                );
+                return false;
+            }
+
+            if (count($exportList) > 0) {
+                $thisTime = Carbon::now();
+                $generationTime = $thisTime->toDateTimeString();
+                $batchNo = $this->getBatchNumber(true);
+                $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, true);
+                if (!$this->sendToFTP(
+                    $xmlContent,
+                    $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
+                    $batchNo
+                )){
+                    return false;
+                }
+
+                $settingsRepository->incrementBatchNumber();
+                $this->markRowsAsSent($exportList, $generationTime);
+            }
+        }
         return true;
     }
 
@@ -798,7 +859,7 @@ class OrderExportService
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
-            $exportDataRepository->deleteOldRecords(Carbon::now()->subDays(30)->toDateTimeString());
+            $exportDataRepository->deleteOldRecords(Carbon::now()->subDays(60)->toDateTimeString());
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.clearExportTableError',
                 [

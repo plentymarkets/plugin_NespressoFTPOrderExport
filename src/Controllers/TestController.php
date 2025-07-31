@@ -4,6 +4,7 @@ namespace NespressoFTPOrderExport\Controllers;
 
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
+use NespressoFTPOrderExport\Repositories\SettingRepository;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Log\Loggable;
 
@@ -11,11 +12,9 @@ class TestController extends Controller
 {
     use Loggable;
 
-    public function testMethod()
-    {
-        return 'abc';
-    }
-
+    /**
+     * @return bool
+     */
     public function clearDataTable()
     {
         $exportDataRepository = pluginApp(ExportDataRepository::class);
@@ -29,5 +28,46 @@ class TestController extends Controller
             return false;
         }
         return true;
+    }
+
+    public function getB2BProductList()
+    {
+        /** @var SettingRepository $settingsRepository */
+        $settingsRepository = pluginApp(SettingRepository::class);
+        return $settingsRepository->getB2BProductList();
+    }
+
+    public function setB2BProductList(array $productArray)
+    {
+        /** @var SettingRepository $settingsRepository */
+        $settingsRepository = pluginApp(SettingRepository::class);
+        $settingsRepository->setB2BProductList($productArray);
+    }
+
+    public function addProductCode(string $newProductCode)
+    {
+        /** @var SettingRepository $settingsRepository */
+        $settingsRepository = pluginApp(SettingRepository::class);
+
+        $productCodes = $settingsRepository->getB2BProductList();
+        if (!in_array($newProductCode, $productCodes)) {
+            $productCodes[] = $newProductCode;
+            $settingsRepository->setB2BProductList($productCodes);
+        }
+    }
+
+    public function deleteProductCode(string $productCode)
+    {
+        /** @var SettingRepository $settingsRepository */
+        $settingsRepository = pluginApp(SettingRepository::class);
+
+        $productCodes = $settingsRepository->getB2BProductList();
+
+        $key = array_search($productCode, $productCodes);
+        if ($key !== false) {
+            unset($productCodes[$key]);
+            $productCodes = array_values($productCodes);
+            $settingsRepository->setB2BProductList($productCodes);
+        }
     }
 }

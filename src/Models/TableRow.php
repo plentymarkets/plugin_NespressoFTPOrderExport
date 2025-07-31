@@ -27,6 +27,12 @@ class TableRow extends Model implements \JsonSerializable
      */
     public $sentAt;
 
+    /**
+     * @var bool
+     */
+    public $isB2B;
+
+
     protected $primaryKeyFieldName     = 'plentyOrderId';
     protected $primaryKeyFieldType     = self::FIELD_TYPE_INT;
     protected $autoIncrementPrimaryKey = false;
@@ -53,6 +59,7 @@ class TableRow extends Model implements \JsonSerializable
             'exportedData'     => $this->exportedData,
             'savedAt'          => $this->savedAt,
             'sentdAt'          => $this->sentAt,
+            'isB2B'            => $this->isB2B
         ];
     }
 }

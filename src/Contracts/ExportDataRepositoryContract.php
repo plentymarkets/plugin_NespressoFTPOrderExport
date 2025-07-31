@@ -11,7 +11,7 @@ interface ExportDataRepositoryContract
 
     public function get($plentyOrderId);
 
-    public function listUnsent(int $maxRows);
+    public function listUnsent(int $maxRows, bool $isB2B=false);
 
     public function orderExists(int $plentyOrderId) : bool;
 
