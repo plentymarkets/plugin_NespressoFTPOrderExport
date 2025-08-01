@@ -707,9 +707,10 @@ class OrderExportService
      * @param string $xmlContent
      * @param string $filePrefix
      * @param string $batchNo
+     * @param bool $isB2B
      * @return bool
      */
-    public function sendToFTP(string $xmlContent, string $filePrefix, string $batchNo)
+    public function sendToFTP(string $xmlContent, string $filePrefix, string $batchNo, bool $isB2B)
     {
         $fileName = $filePrefix . '-32-'.$batchNo.'.xml';
         try {
@@ -720,7 +721,7 @@ class OrderExportService
                     'fileName'=> $fileName
                 ]
             );
-            $result = $this->ftpClient->uploadXML($fileName, $xmlContent);
+            $result = $this->ftpClient->uploadXML($fileName, $xmlContent, $isB2B);
             if (is_array($result) && array_key_exists('error', $result) && $result['error'] === true) {
                 $this->getLogger(__METHOD__)
                     ->error(PluginConfiguration::PLUGIN_NAME . '::globals.ftpFileUploadError',
@@ -809,7 +810,8 @@ class OrderExportService
         if (!$this->sendToFTP(
             $xmlContent,
             $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
-            $batchNo
+            $batchNo,
+            false
         )){
             return false;
         }
@@ -839,7 +841,8 @@ class OrderExportService
                 if (!$this->sendToFTP(
                     $xmlContent,
                     $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
-                    $batchNo
+                    $batchNo,
+                    true
                 )){
                     return false;
                 }
