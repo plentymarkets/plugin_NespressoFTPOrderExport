@@ -804,7 +804,7 @@ class OrderExportService
         $batchNo = $this->getBatchNumber(false);
         if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
             $batchNo = "2001";
-            $settingsRepository->incrementBatchNumber();
+            $settingsRepository->incrementBatchNumber(false);
         }
         $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
         if (!$this->sendToFTP(
@@ -816,7 +816,7 @@ class OrderExportService
             return false;
         }
 
-        $settingsRepository->incrementBatchNumber();
+        $settingsRepository->incrementBatchNumber(false);
         $this->markRowsAsSent($exportList, $generationTime);
 
         if ($this->pluginVariant == 'DE') {
@@ -847,7 +847,7 @@ class OrderExportService
                     return false;
                 }
 
-                $settingsRepository->incrementBatchNumber();
+                $settingsRepository->incrementBatchNumber(true);
                 $this->markRowsAsSent($exportList, $generationTime);
             }
         }
