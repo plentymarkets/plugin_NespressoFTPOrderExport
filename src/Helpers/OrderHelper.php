@@ -29,6 +29,9 @@ class OrderHelper
 
     public function isB2B(Order $order)
     {
+        if (!is_array($this->b2bProductCodes)){
+            return false;
+        }
         /** @var OrderItem $orderItem */
         foreach ($order->orderItems as $orderItem) {
             if (in_array($orderItem->variation->number, $this->b2bProductCodes, true)) {
