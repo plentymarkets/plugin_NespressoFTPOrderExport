@@ -62,20 +62,22 @@ class PluginConfiguration
      */
     public function getSFTPCredentials(): array
     {
-        $ftpHost        = $this->getConfigValue('host');
-        $ftpUser        = $this->getConfigValue('username');
-        $ftpPassword    = $this->getConfigValue('password');
-        $ftpPort        = $this->getConfigValue('port');
-        $ftpFolderPath  = $this->getConfigValue('folderPath');
+        $ftpHost                = $this->getConfigValue('host');
+        $ftpUser                = $this->getConfigValue('username');
+        $ftpPassword            = $this->getConfigValue('password');
+        $ftpPort                = $this->getConfigValue('port');
+        $ftpFolderPath          = $this->getConfigValue('folderPath');
+        $ftpFolderPathForB2B    = $this->getConfigValue('folderPath');
 
         if ($ftpHost === null || $ftpUser === null || $ftpPassword === null || $ftpPort === null) {
             $this->getLogger(__METHOD__)->error(self::PLUGIN_NAME . '::error.mandatoryCredentialsAreNotSet',
                 [
-                    'ftp_hostname'     => $ftpHost,
-                    'ftp_username'     => $ftpUser,
-                    'ftp_password'     => $ftpPassword,
-                    'ftp_port'         => $ftpPort,
-                    'ftp_folderPath'   => $ftpFolderPath,
+                    'ftp_hostname'      => $ftpHost,
+                    'ftp_username'      => $ftpUser,
+                    'ftp_password'      => $ftpPassword,
+                    'ftp_port'          => $ftpPort,
+                    'ftp_folderPath'    => $ftpFolderPath,
+                    'ftp_folderPath_B2B'=> $ftpFolderPathForB2B,
                 ]);
             
             return [
@@ -84,11 +86,12 @@ class PluginConfiguration
         }
 
         return [
-            'ftp_hostname'     => $ftpHost,
-            'ftp_username'     => $ftpUser,
-            'ftp_password'     => $ftpPassword,
-            'ftp_port'         => $ftpPort,
-            'ftp_folderPath'   => $ftpFolderPath,
+            'ftp_hostname'      => $ftpHost,
+            'ftp_username'      => $ftpUser,
+            'ftp_password'      => $ftpPassword,
+            'ftp_port'          => $ftpPort,
+            'ftp_folderPath'    => $ftpFolderPath,
+            'ftp_folderPath_B2B'=> $ftpFolderPathForB2B,
         ];
     }
 

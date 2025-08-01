@@ -48,17 +48,24 @@ class ClientForSFTP
     /**
      * @param string $filename
      * @param string $xmlContent
+     * @param bool $isB2B
      * @return array
      */
-    public function uploadXML(string $filename, string $xmlContent)
+    public function uploadXML(string $filename, string $xmlContent, bool $isB2B)
     {
+        $folderPath = '';
+        if ($isB2B){
+            $folderPath = $this->credentials['ftp_folderPath_B2B'];
+        } else {
+            $folderPath = $this->credentials['ftp_folderPath'];
+        }
         return $this->libraryCall->call(
             PluginConfiguration::PLUGIN_NAME . '::upload_file',
             [
                 'host' => $this->credentials['ftp_hostname'],
                 'username' => $this->credentials['ftp_username'],
                 'password' => $this->credentials['ftp_password'],
-                'folderPath' => $this->credentials['ftp_folderPath'],
+                'folderPath' => $folderPath,
                 'privatekey' => null,
                 'fileName' => $filename,
                 'xmlContent' => $xmlContent

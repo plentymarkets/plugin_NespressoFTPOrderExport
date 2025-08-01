@@ -36,6 +36,12 @@
           "label": "Config.folderPath",
           "options": {}
         },
+        "b2b_folderPath": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.b2b_folderPath",
+          "options": {}
+        },
         "pluginVariant": {
           "type": "selectBox",
           "required": false,
