@@ -793,31 +793,29 @@ class OrderExportService
             return false;
         }
 
-        if (count($exportList) == 0){
-            return false;
-        }
-
         $settingsRepository = pluginApp(SettingRepository::class);
 
-        $thisTime = Carbon::now();
-        $generationTime = $thisTime->toDateTimeString();
-        $batchNo = $this->getBatchNumber(false);
-        if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
-            $batchNo = "2001";
-            $settingsRepository->incrementBatchNumber(false);
-        }
-        $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
-        if (!$this->sendToFTP(
-            $xmlContent,
-            $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
-            $batchNo,
-            false
-        )){
-            return false;
-        }
+        if (count($exportList) > 0) {
+            $thisTime = Carbon::now();
+            $generationTime = $thisTime->toDateTimeString();
+            $batchNo = $this->getBatchNumber(false);
+            if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
+                $batchNo = "2001";
+                $settingsRepository->incrementBatchNumber(false);
+            }
+            $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
+            if (!$this->sendToFTP(
+                $xmlContent,
+                $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
+                $batchNo,
+                false
+            )) {
+                return false;
+            }
 
-        $settingsRepository->incrementBatchNumber(false);
-        $this->markRowsAsSent($exportList, $generationTime);
+            $settingsRepository->incrementBatchNumber(false);
+            $this->markRowsAsSent($exportList, $generationTime);
+        }
 
         if ($this->pluginVariant == 'DE') {
             //for Nespresso DE, we might have also B2B orders, which we sent separatelly
