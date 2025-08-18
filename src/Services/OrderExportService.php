@@ -172,6 +172,7 @@ class OrderExportService
             $deliveryAddress['remark'] = '';
         } else {
             $deliveryAddress['area1'] = $order->deliveryAddress->country->isoCode2;
+            $deliveryAddress['remark'] = $order->id;
         }
 
         $customer = [];
