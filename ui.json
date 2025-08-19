@@ -1,6 +1,6 @@
 {
   "defaultEntryPoint": "index.html",
-  "namespace": "nespresso",
+  "namespace": "NespressoFTPOrderExport",
   "menuEntries": [
   ]
 }
