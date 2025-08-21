@@ -393,7 +393,17 @@ class OrderExportService
             }
         }
 
-        $this->saveRecord($order->id, $record, $isB2B);
+        $xml_destination = 0;
+        if ($this->pluginVariant == 'DE') {
+            if ($isFBM) {
+                $xml_destination = 2;
+            } else {
+                if ($isB2B){
+                    $xml_destination = 1;
+                }
+            }
+        }
+        $this->saveRecord($order->id, $record, $xml_destination);
     }
 
     /**
@@ -419,14 +429,14 @@ class OrderExportService
      * @param array $record
      * @return bool
      */
-    public function saveRecord(int $plentyOrderId, array $record, bool $isB2B){
+    public function saveRecord(int $plentyOrderId, array $record, int $xml_destination){
 
         $exportData = [
             'plentyOrderId'    => $plentyOrderId,
             'exportedData'     => json_encode($record),
             'savedAt'          => Carbon::now()->toDateTimeString(),
             'sentdAt'          => '',
-            'isB2B'            => $isB2B
+            'xml_destination'  => $xml_destination
         ];
 
         /** @var ExportDataRepository $exportDataRepository */
@@ -676,6 +686,8 @@ class OrderExportService
      */
     public function sendDataToClient(): bool
     {
+        //ATENTIE trebuie verificat daca putem avea ordere B2B cu FBM si B2B cu FBA
+        //DEOCAMDATA NU TRATEZ FBM-urile
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
@@ -693,7 +705,7 @@ class OrderExportService
         if (count($exportList) > 0) {
             $thisTime = Carbon::now();
             $generationTime = $thisTime->toDateTimeString();
-            $batchNo = $this->exportHelper->getBatchNumber(false);
+            $batchNo = $settingsRepository->getBatchNumber($this->pluginVariant, false, false);
             if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
                 $batchNo = "2001";
                 $settingsRepository->incrementBatchNumber(false);
@@ -708,7 +720,7 @@ class OrderExportService
                 return false;
             }
 
-            $settingsRepository->incrementBatchNumber(false);
+            $settingsRepository->incrementBatchNumber($this->pluginVariant, false, false);
             $this->markRowsAsSent($exportList, $generationTime);
         }
 
@@ -729,7 +741,7 @@ class OrderExportService
             if (count($exportList) > 0) {
                 $thisTime = Carbon::now();
                 $generationTime = $thisTime->toDateTimeString();
-                $batchNo = $this->exportHelper->getBatchNumber(true);
+                $batchNo = $settingsRepository->getBatchNumber($this->pluginVariant, true, false);
                 $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, true);
                 if (!$this->sendToFTP(
                     $xmlContent,
@@ -740,7 +752,7 @@ class OrderExportService
                     return false;
                 }
 
-                $settingsRepository->incrementBatchNumber(true);
+                $settingsRepository->incrementBatchNumber($this->pluginVariant, true, false);
                 $this->markRowsAsSent($exportList, $generationTime);
             }
         }

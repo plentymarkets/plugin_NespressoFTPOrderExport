@@ -21,17 +21,15 @@ class TableRow extends Model implements \JsonSerializable
      */
     public $savedAt;
 
-
     /**
      * @var string
      */
     public $sentAt;
 
     /**
-     * @var bool
+     * @var int
      */
-    public $isB2B;
-
+    public $xml_destination;
 
     protected $primaryKeyFieldName     = 'plentyOrderId';
     protected $primaryKeyFieldType     = self::FIELD_TYPE_INT;
@@ -59,7 +57,7 @@ class TableRow extends Model implements \JsonSerializable
             'exportedData'     => $this->exportedData,
             'savedAt'          => $this->savedAt,
             'sentdAt'          => $this->sentAt,
-            'isB2B'            => $this->isB2B
+            'xml_destination'  => $this->xml_destination
         ];
     }
 }

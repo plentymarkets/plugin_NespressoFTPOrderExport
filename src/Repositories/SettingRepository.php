@@ -61,18 +61,36 @@ class SettingRepository implements SettingRepositoryContract
         return $this->database->query(Setting::class)->get();
     }
 
+    private function getBatchName(string $pluginVariant, bool $isB2B, bool $isFBM)
+    {
+        //ATENTIE: De revizuit in contextul FBM / B2B
+        if ($pluginVariant == 'DE'){
+            if ($isFBM){
+                $batchField = 'batch_number_fbm';
+            } else {
+                if ($isB2B) {
+                    $batchField = 'batch_number_b2b';
+                } else {
+                    $batchField = 'batch_number';
+                }
+            }
+        } else {
+            $batchField = 'batch_number';
+        }
+        return $batchField;
+    }
+
     /**
-     * @param $isB2B
+     * @param string $pluginVariant
+     * @param bool $isB2B
+     * @param bool $isFBM
      * @return string
      * @throws ValidationException
      */
-    public function getBatchNumber($isB2B): string
+    public function getBatchNumber(string $pluginVariant, bool $isB2B, bool $isFBM): string
     {
-        if (!$isB2B){
-            $batchField = 'batch_number';
-        } else {
-            $batchField = 'batch_number_b2b';
-        }
+        $batchField = $this->getBatchName($pluginVariant, $isB2B, $isFBM);
+
         $batch = $this->get($batchField);
         if ($batch === null){
             $this->save($batchField, 1);
@@ -113,19 +131,17 @@ class SettingRepository implements SettingRepositoryContract
     }
 
     /**
-     * @param $isB2B
+     * @param string $pluginVariant
+     * @param bool $isB2B
+     * @param bool $isFBM
      * @return void
      * @throws ValidationException
      */
-    public function incrementBatchNumber($isB2B): void
+    public function incrementBatchNumber(string $pluginVariant, bool $isB2B, bool $isFBM): void
     {
-        $batch = $this->getBatchNumber($isB2B);
+        $batch = $this->getBatchNumber($pluginVariant, $isB2B, $isFBM);
         $nextBatch = (int)$batch + 1;
-        if (!$isB2B){
-            $batchField = 'batch_number';
-        } else {
-            $batchField = 'batch_number_b2b';
-        }
+        $batchField = $this->getBatchName($pluginVariant, $isB2B, $isFBM);
         $this->save($batchField, $nextBatch);
     }
 

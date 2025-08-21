@@ -196,10 +196,10 @@ class ExportHelper
         return "32";
     }
 
-    public function getSenderIdValue(string $pluginVariant, bool $isB2B, bool $isFBA)
+    public function getSenderIdValue(string $pluginVariant, bool $isB2B, bool $isFBM)
     {
         if ($pluginVariant == 'DE'){
-            if ($isFBA){
+            if ($isFBM){
                 return 86;
             }
             if ($isB2B){
@@ -210,25 +210,16 @@ class ExportHelper
         return 86;
     }
 
-    /**
-     * @return string
-     */
-    public function getBatchNumber($isB2B): string
-    {
-        $settingsRepository = pluginApp(SettingRepository::class);
-        return $settingsRepository->getBatchNumber($isB2B);
-    }
-
-    public function getFileNameForExport(string $pluginVariant, bool $isB2B, bool $isFBA, string $batchNumber)
+    public function getFileNameForExport(string $pluginVariant, bool $isB2B, bool $isFBM, string $batchNumber)
     {
         //
     }
 
     /*
-    public function getExternalRefValue(Order $order, string $pluginVariant, bool $isFBA)
+    public function getExternalRefValue(Order $order, string $pluginVariant, bool $isFBM)
     {
         if ($pluginVariant == 'DE') {
-            if ($isFBA){
+            if ($isFBM){
                 return $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
             }
             return $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID) . '_' . $order->id;
