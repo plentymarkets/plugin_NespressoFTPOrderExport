@@ -41,4 +41,12 @@ class OrderHelper
         return false;
     }
 
+    public function isFBM(Order $order)
+    {
+        if ($order->referrerId == 104.01){
+            return true;
+        }
+        return false;
+    }
+
 }
