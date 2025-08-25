@@ -542,19 +542,20 @@ class OrderExportService
     }
 
     /**
-     * @param TableRow[] $exportList
-     * @param string $generationTime
-     * @param string $batchNo
+     * @param $exportList
+     * @param $generationTime
+     * @param $batchNo
+     * @param int $xml_destination
      * @return string
      */
-    public function generateXMLFromOrderData($exportList, $generationTime, $batchNo, $isB2B): string
+    public function generateXMLFromOrderData($exportList, $generationTime, $batchNo, int $xml_destination): string
     {
         $resultedXML = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <import_batch version_number="1.0" xmlns="http://nesclub.nespresso.com/webservice/club/xsd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nesclub.nespresso.com/webservice/club/xsd/ http://nesclub.nespresso.com/webservice/club/xsd/">
   	<!-- HEADER STARTS HERE--> 
 	<batch_date_time>'.$generationTime.'</batch_date_time>
 	<batch_number>'.$batchNo.'</batch_number> <!-- Batch Number is continous, starting with 01 -->
-	<sender_id>'.$this->exportHelper->getSenderIdValue($this->pluginVariant, $isB2B).'</sender_id>
+	<sender_id>'.$this->exportHelper->getSenderIdValue($this->pluginVariant, $xml_destination).'</sender_id>
 ';
         if ($this->pluginVariant == 'AT') {
             $resultedXML .= "<entity>5</entity>\n";
@@ -610,14 +611,12 @@ class OrderExportService
 
     /**
      * @param string $xmlContent
-     * @param string $filePrefix
-     * @param string $batchNo
-     * @param bool $isB2B
+     * @param string $fileName
+     * @param int $xml_destination
      * @return bool
      */
-    public function sendToFTP(string $xmlContent, string $filePrefix, string $batchNo, bool $isB2B)
+    public function sendToFTP(string $xmlContent, string $fileName, int $xml_destination)
     {
-        $fileName = $filePrefix . '-32-'.$batchNo.'.xml';
         try {
             $this->getLogger(__METHOD__)->info(
                 PluginConfiguration::PLUGIN_NAME . '::general.logMessage',
@@ -626,7 +625,7 @@ class OrderExportService
                     'fileName'=> $fileName
                 ]
             );
-            $result = $this->ftpClient->uploadXML($fileName, $xmlContent, $isB2B);
+            $result = $this->ftpClient->uploadXML($fileName, $xmlContent, $xml_destination);
             if (is_array($result) && array_key_exists('error', $result) && $result['error'] === true) {
                 $this->getLogger(__METHOD__)
                     ->error(PluginConfiguration::PLUGIN_NAME . '::globals.ftpFileUploadError',
@@ -682,79 +681,85 @@ class OrderExportService
     }
 
     /**
-     * @return bool
+     * @return void
      */
     public function sendDataToClient(): bool
     {
         //ATENTIE trebuie verificat daca putem avea ordere B2B cu FBM si B2B cu FBA
-        //DEOCAMDATA NU TRATEZ FBM-urile
+
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
+
+        /** @var SettingRepository $settingsRepository */
+        $settingsRepository = pluginApp(SettingRepository::class);
+
+        $this->sendToOneDestination(
+            $exportDataRepository,
+            $settingsRepository,
+            PluginConfiguration::STANDARD_DESTINATION
+        );
+
+        if ($this->pluginVariant == 'DE') {
+            $this->sendToOneDestination(
+                $exportDataRepository,
+                $settingsRepository,
+                PluginConfiguration::B2B_DESTINATION
+            );
+
+            $this->sendToOneDestination(
+                $exportDataRepository,
+                $settingsRepository,
+                PluginConfiguration::FBM_DESTINATION
+            );
+        }
+        return true;
+    }
+
+    /**
+     * @param ExportDataRepository $exportDataRepository
+     * @param SettingRepository $settingsRepository
+     * @param int $xml_destination
+     * @return bool
+     */
+    private function sendToOneDestination(
+        ExportDataRepository $exportDataRepository,
+        SettingRepository $settingsRepository,
+        int $xml_destination
+    )
+    {
         try {
-            $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch);
+            $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch, $xml_destination);
+            if (count($exportList) > 0) {
+                $thisTime = Carbon::now();
+                $generationTime = $thisTime->toDateTimeString();
+                $batchNo = $settingsRepository->getBatchNumber($xml_destination);
+                if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
+                    $batchNo = "2001";
+                    $settingsRepository->incrementBatchNumber($xml_destination);
+                }
+                $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
+                if (!$this->sendToFTP(
+                    $xmlContent,
+                    $this->exportHelper->getFileNameForExport(
+                        $thisTime,
+                        $xml_destination,
+                        $this->pluginVariant,
+                        $batchNo),
+                    $xml_destination
+                )) {
+                    return false;
+                }
+
+                $settingsRepository->incrementBatchNumber($xml_destination);
+                $this->markRowsAsSent($exportList, $generationTime);
+            }
+
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
                 [
                     'message'     => $e->getMessage(),
                 ]);
             return false;
-        }
-
-        $settingsRepository = pluginApp(SettingRepository::class);
-
-        if (count($exportList) > 0) {
-            $thisTime = Carbon::now();
-            $generationTime = $thisTime->toDateTimeString();
-            $batchNo = $settingsRepository->getBatchNumber($this->pluginVariant, false, false);
-            if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
-                $batchNo = "2001";
-                $settingsRepository->incrementBatchNumber(false);
-            }
-            $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
-            if (!$this->sendToFTP(
-                $xmlContent,
-                $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
-                $batchNo,
-                false
-            )) {
-                return false;
-            }
-
-            $settingsRepository->incrementBatchNumber($this->pluginVariant, false, false);
-            $this->markRowsAsSent($exportList, $generationTime);
-        }
-
-        if ($this->pluginVariant == 'DE') {
-            //for Nespresso DE, we might have also B2B orders, which we sent separatelly
-            try {
-                $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch, true);
-            } catch (\Throwable $e) {
-                $this->getLogger(__METHOD__)->error(
-                    PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
-                    [
-                        'message' => $e->getMessage(),
-                    ]
-                );
-                return false;
-            }
-
-            if (count($exportList) > 0) {
-                $thisTime = Carbon::now();
-                $generationTime = $thisTime->toDateTimeString();
-                $batchNo = $settingsRepository->getBatchNumber($this->pluginVariant, true, false);
-                $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, true);
-                if (!$this->sendToFTP(
-                    $xmlContent,
-                    $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
-                    $batchNo,
-                    true
-                )){
-                    return false;
-                }
-
-                $settingsRepository->incrementBatchNumber($this->pluginVariant, true, false);
-                $this->markRowsAsSent($exportList, $generationTime);
-            }
         }
         return true;
     }

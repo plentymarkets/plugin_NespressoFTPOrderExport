@@ -11,6 +11,9 @@ class PluginConfiguration
     use Loggable;
 
     const PLUGIN_NAME            = "NespressoFTPOrderExport";
+    const STANDARD_DESTINATION   = 0;
+    const B2B_DESTINATION        = 1;
+    const FBM_DESTINATION        = 2;
 
     /**
      * @var ConfigRepository
@@ -67,7 +70,8 @@ class PluginConfiguration
         $ftpPassword            = $this->getConfigValue('password');
         $ftpPort                = $this->getConfigValue('port');
         $ftpFolderPath          = $this->getConfigValue('folderPath');
-        $ftpFolderPathForB2B    = $this->getConfigValue('folderPath');
+        $ftpFolderPathForB2B    = $this->getConfigValue('b2b_folderPath');
+        $ftpFolderPathForFBM    = $this->getConfigValue('fbm_folderPath');
 
         if ($ftpHost === null || $ftpUser === null || $ftpPassword === null || $ftpPort === null) {
             $this->getLogger(__METHOD__)->error(self::PLUGIN_NAME . '::error.mandatoryCredentialsAreNotSet',
@@ -78,6 +82,7 @@ class PluginConfiguration
                     'ftp_port'          => $ftpPort,
                     'ftp_folderPath'    => $ftpFolderPath,
                     'ftp_folderPath_B2B'=> $ftpFolderPathForB2B,
+                    'ftp_folderPath_FBM'=> $ftpFolderPathForFBM,
                 ]);
             
             return [
@@ -92,6 +97,7 @@ class PluginConfiguration
             'ftp_port'          => $ftpPort,
             'ftp_folderPath'    => $ftpFolderPath,
             'ftp_folderPath_B2B'=> $ftpFolderPathForB2B,
+            'ftp_folderPath_FBM'=> $ftpFolderPathForFBM
         ];
     }
 

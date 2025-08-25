@@ -2,11 +2,12 @@
 
 namespace NespressoFTPOrderExport\Repositories;
 
+use NespressoFTPOrderExport\Configuration\PluginConfiguration;
+use NespressoFTPOrderExport\Contracts\SettingRepositoryContract;
+use NespressoFTPOrderExport\Models\Setting;
 use Plenty\Exceptions\ValidationException;
 use Plenty\Modules\Plugin\DataBase\Contracts\DataBase;
 use Plenty\Modules\Plugin\DataBase\Contracts\Model;
-use NespressoFTPOrderExport\Contracts\SettingRepositoryContract;
-use NespressoFTPOrderExport\Models\Setting;
 
 class SettingRepository implements SettingRepositoryContract
 {
@@ -61,35 +62,34 @@ class SettingRepository implements SettingRepositoryContract
         return $this->database->query(Setting::class)->get();
     }
 
-    private function getBatchName(string $pluginVariant, bool $isB2B, bool $isFBM)
+    /**
+     * @param bool $xml_destination
+     * @return string
+     */
+    private function getBatchName(bool $xml_destination)
     {
-        //ATENTIE: De revizuit in contextul FBM / B2B
-        if ($pluginVariant == 'DE'){
-            if ($isFBM){
+        switch ($xml_destination){
+            case PluginConfiguration::STANDARD_DESTINATION:
+                $batchField = 'batch_number';
+                break;
+            case PluginConfiguration::B2B_DESTINATION:
+                $batchField = 'batch_number_b2b';
+                break;
+            case PluginConfiguration::FBM_DESTINATION:
                 $batchField = 'batch_number_fbm';
-            } else {
-                if ($isB2B) {
-                    $batchField = 'batch_number_b2b';
-                } else {
-                    $batchField = 'batch_number';
-                }
-            }
-        } else {
-            $batchField = 'batch_number';
+                break;
         }
         return $batchField;
     }
 
     /**
-     * @param string $pluginVariant
-     * @param bool $isB2B
-     * @param bool $isFBM
+     * @param int $xml_destination
      * @return string
      * @throws ValidationException
      */
-    public function getBatchNumber(string $pluginVariant, bool $isB2B, bool $isFBM): string
+    public function getBatchNumber(int $xml_destination): string
     {
-        $batchField = $this->getBatchName($pluginVariant, $isB2B, $isFBM);
+        $batchField = $this->getBatchName($xml_destination);
 
         $batch = $this->get($batchField);
         if ($batch === null){
@@ -131,17 +131,15 @@ class SettingRepository implements SettingRepositoryContract
     }
 
     /**
-     * @param string $pluginVariant
-     * @param bool $isB2B
-     * @param bool $isFBM
+     * @param int $xml_destination
      * @return void
      * @throws ValidationException
      */
-    public function incrementBatchNumber(string $pluginVariant, bool $isB2B, bool $isFBM): void
+    public function incrementBatchNumber(int $xml_destination): void
     {
-        $batch = $this->getBatchNumber($pluginVariant, $isB2B, $isFBM);
+        $batch = $this->getBatchNumber($xml_destination);
         $nextBatch = (int)$batch + 1;
-        $batchField = $this->getBatchName($pluginVariant, $isB2B, $isFBM);
+        $batchField = $this->getBatchName($xml_destination);
         $this->save($batchField, $nextBatch);
     }
 

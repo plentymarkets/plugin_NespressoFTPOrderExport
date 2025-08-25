@@ -2,6 +2,8 @@
 
 namespace NespressoFTPOrderExport\Helpers;
 
+use Carbon\Carbon;
+use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Property\Models\OrderPropertyType;
@@ -38,7 +40,7 @@ class ExportHelper
         }
         return [
             'orderDeliveryName1' => $orderDeliveryName1,
-            '$orderBillingName1' => $orderBillingName1
+            'orderBillingName1' => $orderBillingName1
         ];
     }
 
@@ -196,23 +198,54 @@ class ExportHelper
         return "32";
     }
 
-    public function getSenderIdValue(string $pluginVariant, bool $isB2B, bool $isFBM)
+    /**
+     * @param string $pluginVariant
+     * @param int $xml_destination
+     * @return int
+     */
+    public function getSenderIdValue(string $pluginVariant, int $xml_destination)
     {
-        if ($pluginVariant == 'DE'){
-            if ($isFBM){
+        switch ($xml_destination){
+            case PluginConfiguration::STANDARD_DESTINATION:
+                if ($pluginVariant == 'DE'){
+                    return 89;
+                }
                 return 86;
-            }
-            if ($isB2B){
+            case PluginConfiguration::B2B_DESTINATION:
                 return 90;
-            }
-            return 89;
+            case PluginConfiguration::FBM_DESTINATION:
+                return 86;
         }
-        return 86;
     }
 
-    public function getFileNameForExport(string $pluginVariant, bool $isB2B, bool $isFBM, string $batchNumber)
+    public function getFileNameForExport(Carbon $thisTime, int $xml_destination, string $pluginVariant, string $batchNo)
     {
-        //
+        //ATENTIE: Structura numelui de fisier este diferita intre AT si DE
+        //sigur sintaxa pentru DE se schimba la formatul anului si renuntam la ora?
+        //mai folosim -32- ?
+        //ce nume va avea DE la B2B?
+        switch ($xml_destination){
+            case PluginConfiguration::STANDARD_DESTINATION:
+                if ($pluginVariant == 'DE') {
+                    $fileName = 'B2B_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
+                            "HHmm"
+                        ) . '-32-' . $batchNo . '.xml';
+                } else {
+                    $fileName = $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
+                            "HHmm"
+                        ) . '-32-' . $batchNo . '.xml';
+                }
+                break;
+            case PluginConfiguration::B2B_DESTINATION:
+                //B2C_FBA_TTMMJJJJ_
+                $fileName = 'B2C_FBA_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-32-'.$batchNo.'.xml';
+                break;
+            case PluginConfiguration::FBM_DESTINATION:
+                //B2C_FBM_TTMMJJJJ
+                $fileName = 'B2C_FBM_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-32-'.$batchNo.'.xml';
+                break;
+        }
+        return $fileName;
     }
 
     /*
