@@ -4,6 +4,7 @@ namespace NespressoFTPOrderExport\Controllers;
 
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
+use NespressoFTPOrderExport\Services\OrderExportService;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Log\Loggable;
@@ -69,5 +70,12 @@ class TestController extends Controller
             $productCodes = array_values($productCodes);
             $settingsRepository->setB2BProductList($productCodes);
         }
+    }
+
+    public function callExportXml()
+    {
+        /** @var OrderExportService $exportService */
+        $exportService = pluginApp(OrderExportService::class);
+        $exportService->sendDataToClient();
     }
 }
