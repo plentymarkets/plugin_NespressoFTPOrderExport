@@ -83,8 +83,8 @@ class OrderExportService
      */
     public function processOrder(Order $order)
     {
-        $isB2B = $this->orderHelper->isB2B($order);
-        $isFBM = $this->orderHelper->isFBM($order);
+        $isB2B = $this->orderHelper->isB2B($order, $this->pluginVariant);
+        $isFBM = $this->orderHelper->isFBM($order, $this->pluginVariant);
         $xml_destination = 0;
         if ($this->pluginVariant == 'DE') {
             if ($isFBM) {
