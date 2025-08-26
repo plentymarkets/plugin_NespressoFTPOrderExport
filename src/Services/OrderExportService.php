@@ -83,14 +83,24 @@ class OrderExportService
      */
     public function processOrder(Order $order)
     {
-        $deliveryAddress = [];
         $isB2B = $this->orderHelper->isB2B($order);
         $isFBM = $this->orderHelper->isFBM($order);
+        $xml_destination = 0;
+        if ($this->pluginVariant == 'DE') {
+            if ($isFBM) {
+                $xml_destination = 2;
+            } else {
+                if ($isB2B){
+                    $xml_destination = 1;
+                }
+            }
+        }
 
         $namesFromOrder = $this->exportHelper->getNamesFromOrder($order, $this->pluginVariant);
         $orderDeliveryName1 = $namesFromOrder['orderDeliveryName1'];
         $orderBillingName1  = $namesFromOrder['orderBillingName1'];
 
+        $deliveryAddress = [];
         $deliveryAddress['company'] = ($orderDeliveryName1 != '') ? 1 : 0;
         $deliveryAddress['name'] = $this->exportHelper->getDeliveryNameValue($order, $this->pluginVariant, $orderDeliveryName1);
         $deliveryAddress['first_name'] = ($orderDeliveryName1 != '') ? '' : $order->deliveryAddress->name2;
@@ -300,11 +310,6 @@ class OrderExportService
 
         $record = [];
 
-        //fields stored in the export table to allow calculation on file export
-        $record['isB2B'] = $isB2B;
-        $record['isFBM'] = $isFBM;
-        $record['pluginVariant'] = $this->pluginVariant;
-
         if ($this->pluginVariant == 'DE') {
             $record['record_remarks'] = "";
         }
@@ -393,16 +398,6 @@ class OrderExportService
             }
         }
 
-        $xml_destination = 0;
-        if ($this->pluginVariant == 'DE') {
-            if ($isFBM) {
-                $xml_destination = 2;
-            } else {
-                if ($isB2B){
-                    $xml_destination = 1;
-                }
-            }
-        }
         $this->saveRecord($order->id, $record, $xml_destination);
     }
 
@@ -568,17 +563,6 @@ class OrderExportService
         /** @var TableRow $order */
         foreach ($exportList as $order){
             $orderData = json_decode($order->exportedData, true);
-
-            //remove data required only for calculations
-            if (isset($orderData['isB2B'])){
-                unset($orderData['isB2B']);
-            }
-            if (isset($orderData['isFBM'])){
-                unset($orderData['isFBM']);
-            }
-            if (isset($orderData['pluginVariant'])){
-                unset($orderData['pluginVariant']);
-            }
 
             //convert data into XML format with particular attributes
             $resultedXML .= $this->arrayToXml(['record' => $orderData]);
