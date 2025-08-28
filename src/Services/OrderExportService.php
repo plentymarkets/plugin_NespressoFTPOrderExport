@@ -777,26 +777,28 @@ class OrderExportService
         }
     }
 
-    /**
-     * @return bool
-     */
     public function sendDataToClient(): bool
     {
+        $rTest = 'A';
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
+            $rTest .= 'B';
             $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch);
+            $rTest .= strlen($exportList);
         } catch (\Throwable $e) {
+            $rTest .= 'C';
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
                 [
                     'message'     => $e->getMessage(),
                 ]);
-            return false;
+            return $rTest;
         }
 
         $settingsRepository = pluginApp(SettingRepository::class);
 
         if (count($exportList) > 0) {
+            $rTest .= 'D';
             $thisTime = Carbon::now();
             $generationTime = $thisTime->toDateTimeString();
             $batchNo = $this->getBatchNumber(false);
@@ -811,14 +813,17 @@ class OrderExportService
                 $batchNo,
                 false
             )) {
-                return false;
+                $rTest .= 'E';
+                return $rTest;
             }
 
+            $rTest .= 'F';
             $settingsRepository->incrementBatchNumber(false);
             $this->markRowsAsSent($exportList, $generationTime);
         }
 
         if ($this->pluginVariant == 'DE') {
+            $rTest .= 'G';
             //for Nespresso DE, we might have also B2B orders, which we sent separatelly
             try {
                 $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch, true);
@@ -829,7 +834,7 @@ class OrderExportService
                         'message' => $e->getMessage(),
                     ]
                 );
-                return false;
+                return $rTest;
             }
 
             if (count($exportList) > 0) {
@@ -843,14 +848,14 @@ class OrderExportService
                     $batchNo,
                     true
                 )){
-                    return false;
+                    return $rTest;
                 }
 
                 $settingsRepository->incrementBatchNumber(true);
                 $this->markRowsAsSent($exportList, $generationTime);
             }
         }
-        return true;
+        return $rTest;
     }
 
     /**
