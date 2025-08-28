@@ -124,9 +124,10 @@ class OrderExportService
             }
         }
 
-        $deliveryAddress['post_code'] = ($this->pluginVariant == 'AT') ?
-            preg_replace("/[^0-9]/", "", $deliveryAddress['post_code'] ) :
-            $order->deliveryAddress->postalCode;
+        $deliveryAddress['post_code'] = $order->deliveryAddress->postalCode;
+        if ($this->pluginVariant == 'AT') {
+            preg_replace("/[^0-9]/", "", $deliveryAddress['post_code']);
+        }
 
         $deliveryAddress['city'] = $order->deliveryAddress->town;
         $deliveryAddress['country'] = $order->deliveryAddress->country->isoCode2;
@@ -164,7 +165,11 @@ class OrderExportService
                 }
             }
 
-            $invoiceAddress['post_code'] = ($this->pluginVariant == 'AT') ? preg_replace("/[^0-9]/", "", $invoiceAddress['post_code'] ) : $order->billingAddress->postalCode;
+            $invoiceAddress['post_code'] = $order->billingAddress->postalCode;
+            if ($this->pluginVariant == 'AT') {
+                preg_replace("/[^0-9]/", "", $invoiceAddress['post_code']);
+            }
+
             $invoiceAddress['city'] = $order->billingAddress->town;
             $invoiceAddress['country'] = $order->billingAddress->country->isoCode2;
 
@@ -271,6 +276,12 @@ class OrderExportService
         $orderData = [];
         $orderData['client_id'] = $this->getCustomerId($order);
         $orderData['external_order_id'] = $order->id; //ATENTIE S-a modificat pentru DE FBA
+
+        //ATENTIE: Pentru DE trebuie sa folosim "Amazon Order ID". Este oare identic cu external order ID?
+        if ($this->pluginVariant == 'AT') {
+            $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+        }
+
         $orderData['movement_code'] = $this->exportHelper->getMovementCodeValue($this->pluginVariant, $isB2B, $isFBM);
 
         if ($this->pluginVariant == 'DE') {
@@ -281,10 +292,6 @@ class OrderExportService
             )->first()->date->isoFormat("DD/MM/YYYY");
         }
 
-        //ATENTIE: Pentru DE trebuie sa folosim "Amazon Order ID". Este oare identic cu external order ID?
-        if ($this->pluginVariant == 'AT') {
-            $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
-        }
 
         $orderData['order_source'] = $this->exportHelper->getSourceCodeValue($this->pluginVariant, $isB2B);
         $orderData['delivery_mode'] = $this->exportHelper->getDeliveryModeValue($this->pluginVariant, $isFBM);
