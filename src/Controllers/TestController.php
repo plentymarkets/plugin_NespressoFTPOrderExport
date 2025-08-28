@@ -76,6 +76,6 @@ class TestController extends Controller
     {
         /** @var OrderExportService $exportService */
         $exportService = pluginApp(OrderExportService::class);
-        $exportService->sendDataToClient();
+        return $exportService->sendDataToClient();
     }
 }
