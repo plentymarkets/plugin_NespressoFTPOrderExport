@@ -58,7 +58,7 @@ class ExportHelper
     public function getInvoiceNameValue(Order $order, string $pluginVariant, $orderBillingName1)
     {
         if ($orderBillingName1 != '') {
-            return $orderBillingName1; //ATENTIE DIFERIT DE DELIVERY!
+            return $orderBillingName1; //ATENTIE DIFERIT DE DELIVERY pentru AT!
         }
         return $order->billingAddress->name3;
     }
@@ -75,7 +75,7 @@ class ExportHelper
     {
         if ( ($pluginVariant == 'AT') && ($order->billingAddress->companyName != '')){
             return $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
-            //ATENTIE DIFERIT DE DELIVERY!
+            //ATENTIE DIFERIT DE DELIVERY pentru AT!
         }
         return '';
     }

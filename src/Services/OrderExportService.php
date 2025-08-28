@@ -148,6 +148,7 @@ class OrderExportService
             if ($this->pluginVariant == 'DE') {
                 $invoiceAddress['contact'] = ($orderBillingName1 != '') ? $order->billingAddress->name2 . ' ' . $order->billingAddress->name3 : '';
             }
+            //ATENTIE: In Mapping Table, civility e diferit pentru Invoice!
             $invoiceAddress['civility'] = ($this->pluginVariant == 'DE') ? 5 : 10;
             $invoiceAddress['extra_name'] = $this->exportHelper->getInvoiceExtraNameValue($order, $this->pluginVariant);
             $invoiceAddress['address_line1'] = $this->exportHelper->getInvoiceAddressLine1Value($order, $this->pluginVariant);
@@ -324,7 +325,7 @@ class OrderExportService
         if ($this->pluginVariant == 'DE') {
             $record['member_number'] = "";
         }
-//ATENTIE:  La DE, putem combina B2B cu FBM? Sau FBA, FBM si B2B sunt 3 chestiuni diferite???
+
         $record['address_changed'] = 1;
         $record['order_source'] = $this->exportHelper->getOrderSourceValue($this->pluginVariant, $isB2B);
         $record['channel'] = $this->exportHelper->getChannelValue($this->pluginVariant, $isB2B);
@@ -669,8 +670,6 @@ class OrderExportService
      */
     public function sendDataToClient(): bool
     {
-        //ATENTIE trebuie verificat daca putem avea ordere B2B cu FBM si B2B cu FBA
-
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
 
