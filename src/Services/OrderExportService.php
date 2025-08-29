@@ -732,7 +732,7 @@ class OrderExportService
                     $batchNo = "2001";
                     $settingsRepository->incrementBatchNumber($xml_destination);
                 }
-                $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
+                $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, $xml_destination);
                 if (!$this->sendToFTP(
                     $xmlContent,
                     $this->exportHelper->getFileNameForExport(
