@@ -59,6 +59,10 @@ class OrderExportService
 
     /**
      * @param ClientForSFTP $ftpClient
+     * @param PluginConfiguration $configRepository
+     * @param OrderRepositoryContract $orderRepository
+     * @param OrderHelper $orderHelper
+     * @param ExportHelper $exportHelper
      */
     public function __construct(
         ClientForSFTP           $ftpClient,
@@ -278,9 +282,7 @@ class OrderExportService
         $orderData['external_order_id'] = $order->id; //ATENTIE S-a modificat pentru DE FBA
 
         //ATENTIE: Pentru DE trebuie sa folosim "Amazon Order ID". Este oare identic cu external order ID?
-        if ($this->pluginVariant == 'AT') {
-            $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
-        }
+        $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
 
         $orderData['movement_code'] = $this->exportHelper->getMovementCodeValue($this->pluginVariant, $isB2B, $isFBM);
 
@@ -323,7 +325,10 @@ class OrderExportService
         }
 
         //ATENTIE: S-a modificat valoarea pentru DE-FBA!
-        $record['external_ref'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+        $record['external_ref'] = ($this->pluginVariant == 'DE') ?
+            $order->id :
+            $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+
 
         if ($this->pluginVariant == 'AT') {
             $record['identification_mode'] = "N";
