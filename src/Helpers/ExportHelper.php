@@ -227,7 +227,7 @@ class ExportHelper
         switch ($xml_destination){
             case PluginConfiguration::STANDARD_DESTINATION:
                 if ($pluginVariant == 'DE') {
-                    $fileName = 'B2C_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
+                    $fileName = 'B2C_FBA' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
                             "HHmm"
                         ) . '-32-' . $batchNo . '.xml';
                 } else {
@@ -237,7 +237,7 @@ class ExportHelper
                 }
                 break;
             case PluginConfiguration::B2B_DESTINATION:
-                $fileName = 'B2B_FBA_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-32-'.$batchNo.'.xml';
+                $fileName = 'B2B_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-32-'.$batchNo.'.xml';
                 break;
             case PluginConfiguration::FBM_DESTINATION:
                 $fileName = 'B2C_FBM_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-32-'.$batchNo.'.xml';
