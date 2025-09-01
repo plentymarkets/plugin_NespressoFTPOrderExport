@@ -664,6 +664,7 @@ class OrderExportService
                     'exportedData'     => $order->exportedData,
                     'savedAt'          => $order->savedAt,
                     'sentAt'           => $generationTime,
+                    'xml_destination'  => $order->xml_destination
                 ];
                 $exportDataRepository->save($exportData);
             }
