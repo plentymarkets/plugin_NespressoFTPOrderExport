@@ -3,6 +3,7 @@
 namespace NespressoFTPOrderExport\Repositories;
 
 use NespressoFTPOrderExport\Contracts\ExportDataRepositoryContract;
+use NespressoFTPOrderExport\Models\HistoryData;
 use NespressoFTPOrderExport\Models\TableRow;
 use Plenty\Modules\Plugin\DataBase\Contracts\DataBase;
 
@@ -93,6 +94,11 @@ class ExportDataRepository implements ExportDataRepositoryContract
     public function deleteOldRecords(string $dateLimit) : void
     {
         $this->database->query(TableRow::class)
+            ->where('sentAt', '!=', '')
+            ->where('sentAt', '<', $dateLimit)
+            ->delete();
+
+        $this->database->query(HistoryData::class)
             ->where('sentAt', '!=', '')
             ->where('sentAt', '<', $dateLimit)
             ->delete();

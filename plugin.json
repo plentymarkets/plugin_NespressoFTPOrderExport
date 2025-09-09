@@ -11,7 +11,7 @@
     "namespace": "NespressoFTPOrderExport",
     "author": "plentysystems AG",
     "type": "backend",
-    "version": "1.1.45",
+    "version": "1.1.46",
     "isClosedSource": true,
     "authorIcon": "icon_author_xs.png",
     "pluginIcon": "icon_plugin_xs.png",
@@ -30,7 +30,8 @@
         "NespressoFTPOrderExport\\Migrations\\CreateNespressoSettingsTable",
         "NespressoFTPOrderExport\\Migrations\\UseTextInExportTable",
         "NespressoFTPOrderExport\\Migrations\\AddB2BColumnToExportTable",
-        "NespressoFTPOrderExport\\Migrations\\SetDestinationForXmlFile.php"
+        "NespressoFTPOrderExport\\Migrations\\SetDestinationForXmlFile.php",
+        "NespressoFTPOrderExport\\Migrations\\CreateNespressoHistoryTable.php"
     ],
     "dependencies": {
         "guzzlehttp/guzzle": "^7.0",

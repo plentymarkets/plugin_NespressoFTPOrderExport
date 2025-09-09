@@ -57,6 +57,7 @@ class OrderExportService
      */
    private $exportHelper;
 
+
     /**
      * @param ClientForSFTP $ftpClient
      * @param PluginConfiguration $configRepository
@@ -87,6 +88,8 @@ class OrderExportService
      */
     public function processOrder(Order $order)
     {
+        $this->exportHelper->addHistoryData('Start processing order ' . $order->id, $order->id);
+
         $isB2B = $this->orderHelper->isB2B($order, $this->pluginVariant);
         $isFBM = $this->orderHelper->isFBM($order, $this->pluginVariant);
         $xml_destination = 0;
@@ -147,13 +150,12 @@ class OrderExportService
         $invoiceAddress = [];
         $customer['address_different'] = (int)($order->deliveryAddress->id != $order->billingAddress->id);
         if ($customer['address_different']) {
-            $invoiceAddress['company'] = ($orderBillingName1 != '') ? '1' : '0'; //ATENTIE: Nu exista pentru DE???
+            $invoiceAddress['company'] = ($orderBillingName1 != '') ? '1' : '0';
             $invoiceAddress['name'] = $this->exportHelper->getInvoiceNameValue($order, $this->pluginVariant, $orderBillingName1);
             $invoiceAddress['first_name'] = ($orderBillingName1 != '') ? '' : $order->billingAddress->name2;
             if ($this->pluginVariant == 'DE') {
                 $invoiceAddress['contact'] = ($orderBillingName1 != '') ? $order->billingAddress->name2 . ' ' . $order->billingAddress->name3 : '';
             }
-            //ATENTIE: In Mapping Table, civility e diferit pentru Invoice!
             $invoiceAddress['civility'] = ($this->pluginVariant == 'DE') ? 5 : 10;
             $invoiceAddress['extra_name'] = $this->exportHelper->getInvoiceExtraNameValue($order, $this->pluginVariant);
             $invoiceAddress['address_line1'] = $this->exportHelper->getInvoiceAddressLine1Value($order, $this->pluginVariant);
@@ -266,7 +268,7 @@ class OrderExportService
         $customer['delivery_address'] = $deliveryAddress;
         if ($this->pluginVariant == 'DE') {
             $customer['state_inscription_number'] = '';
-            $customer['vat_number'] = ''; //ATENTIE: Nu inteleg valoarea pentru campul acesta
+            $customer['vat_number'] = $order->billingAddress->taxIdNumber;
             $customer['company'] = ($orderBillingName1 != '') ? '1' : '0';
         }
         $customer['invoice_address'] = $invoiceAddress;
@@ -279,9 +281,8 @@ class OrderExportService
 
         $orderData = [];
         $orderData['client_id'] = $this->getCustomerId($order);
-        $orderData['external_order_id'] = $order->id; //ATENTIE S-a modificat pentru DE FBA
+        $orderData['external_order_id'] = $order->id;
 
-        //ATENTIE: Pentru DE trebuie sa folosim "Amazon Order ID". Este oare identic cu external order ID?
         $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
 
         $orderData['movement_code'] = $this->exportHelper->getMovementCodeValue($this->pluginVariant, $isB2B, $isFBM);
@@ -324,7 +325,6 @@ class OrderExportService
             $record['record_remarks'] = "";
         }
 
-        //ATENTIE: S-a modificat valoarea pentru DE-FBA!
         $record['external_ref'] = ($this->pluginVariant == 'DE') ?
             $order->id :
             $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
@@ -412,6 +412,8 @@ class OrderExportService
         }
 
         $this->saveRecord($order->id, $record, $xml_destination);
+
+        $this->exportHelper->addHistoryData('End processing order ' . $order->id, $order->id);
     }
 
     /**
@@ -453,36 +455,18 @@ class OrderExportService
             if (!$exportDataRepository->orderExists($plentyOrderId)) {
                 /** @var TableRow $savedObject */
                 $exportDataRepository->save($exportData);
-
-                //test logs
-                $this->getLogger(__METHOD__)
-                    ->addReference('orderId', $plentyOrderId)
-                    ->debug(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
-                        'message'           => 'Saved to export stack',
-                    ]);
-                if ($exportDataRepository->orderExists($plentyOrderId)){
-                    $this->getLogger(__METHOD__)
-                        ->addReference('orderId', $plentyOrderId)
-                        ->debug(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
-                            'message'           => 'Record found',
-                        ]);
-                } else {
-                    $this->getLogger(__METHOD__)
-                        ->addReference('orderId', $plentyOrderId)
-                        ->error(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
-                            'message'           => 'The record was not found',
-                        ]);
-                }
-
+                $this->exportHelper->addHistoryData('Saved to export stack', $plentyOrderId);
                 $statusOfProcessedOrder = $this->configRepository->getProcessedOrderStatus();
                 if ($statusOfProcessedOrder != ''){
                     $this->orderRepository->updateOrder(['statusId' => $statusOfProcessedOrder], $plentyOrderId);
+                    $this->exportHelper->addHistoryData('Order status updated to ' . $statusOfProcessedOrder, $plentyOrderId);
                 }
                 return true;
             }
             $this->getLogger(__METHOD__)
                 ->addReference('orderId', $plentyOrderId)
                 ->report(PluginConfiguration::PLUGIN_NAME . '::error.orderExists', $exportData);
+            $this->exportHelper->addHistoryData('Order already exists in the export stack', $plentyOrderId);
             return false;
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)
@@ -492,6 +476,7 @@ class OrderExportService
                     'message'     => $e->getMessage(),
                     'exportData'  => $exportData
                 ]);
+            $this->exportHelper->addHistoryData('Exception when writing to the export table: ' . $e->getMessage(), $plentyOrderId);
         }
         return false;
     }
@@ -743,11 +728,15 @@ class OrderExportService
                         $batchNo),
                     $xml_destination
                 )) {
+                    $this->exportHelper->addHistoryData('Export to ' . $xml_destination . ' failed!');
                     return false;
                 }
 
                 $settingsRepository->incrementBatchNumber($xml_destination);
                 $this->markRowsAsSent($exportList, $generationTime);
+                $this->exportHelper->addHistoryData('Export to ' . $xml_destination . ' succeeded! (Batch: '.$batchNo.')');
+            } else {
+                $this->exportHelper->addHistoryData('No data for ' . $xml_destination . ' destination.');
             }
 
         } catch (\Throwable $e) {
@@ -755,6 +744,7 @@ class OrderExportService
                 [
                     'message'     => $e->getMessage(),
                 ]);
+            $this->exportHelper->addHistoryData('Exception when sending to ' . $xml_destination . ' dest.: ' . $e->getMessage());
             return false;
         }
         return true;

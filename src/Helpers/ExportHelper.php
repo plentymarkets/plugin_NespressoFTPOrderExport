@@ -4,12 +4,24 @@ namespace NespressoFTPOrderExport\Helpers;
 
 use Carbon\Carbon;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
-use NespressoFTPOrderExport\Repositories\SettingRepository;
+use NespressoFTPOrderExport\Contracts\HistoryDataRepositoryContract;
 use Plenty\Modules\Order\Models\Order;
-use Plenty\Modules\Order\Property\Models\OrderPropertyType;
 
 class ExportHelper
 {
+
+    /**
+     * @var HistoryDataRepositoryContract
+     */
+    private $historyData;
+
+    public function __construct(
+        HistoryDataRepositoryContract $historyData
+    )
+    {
+        $this->historyData = $historyData;
+    }
+
     public function getNamesFromOrder(Order $order, string $pluginVariant)
     {
         //dismiss data in name1 if it contains wrong information
@@ -220,43 +232,37 @@ class ExportHelper
 
     public function getFileNameForExport(Carbon $thisTime, int $xml_destination, string $pluginVariant, string $batchNo)
     {
-        //ATENTIE: Structura numelui de fisier este diferita intre AT si DE
-        //sigur sintaxa pentru DE se schimba la formatul anului si renuntam la ora?
-        //mai folosim -32- ?
-        //ce nume va avea DE la B2B?
         switch ($xml_destination){
             case PluginConfiguration::STANDARD_DESTINATION:
                 if ($pluginVariant == 'DE') {
                     $fileName = 'B2C_FBA' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
                             "HHmm"
-                        ) . '-32-' . $batchNo . '.xml';
+                        ) . '-' . $batchNo . '.xml';
                 } else {
                     $fileName = $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
                             "HHmm"
-                        ) . '-32-' . $batchNo . '.xml';
+                        ) . '-' . $batchNo . '.xml';
                 }
                 break;
             case PluginConfiguration::B2B_DESTINATION:
-                $fileName = 'B2B_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-32-'.$batchNo.'.xml';
+                $fileName = 'B2B_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-'.$batchNo.'.xml';
                 break;
             case PluginConfiguration::FBM_DESTINATION:
-                $fileName = 'B2C_FBM_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-32-'.$batchNo.'.xml';
+                $fileName = 'B2C_FBM_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-'.$batchNo.'.xml';
                 break;
         }
         return $fileName;
     }
 
-    /*
-    public function getExternalRefValue(Order $order, string $pluginVariant, bool $isFBM)
+    public function addHistoryData($message, $plentyOrderId = -1)
     {
-        if ($pluginVariant == 'DE') {
-            if ($isFBM){
-                return $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
-            }
-            return $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID) . '_' . $order->id;
-        }
-        return $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+        $data = [
+            'plentyOrderId' => $plentyOrderId,
+            'message'       => $message,
+            'savedAt'       => Carbon::now()->toDateTimeString()
+        ];
+
+        $this->historyData->save($data);
     }
-    */
 
 }
