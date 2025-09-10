@@ -235,7 +235,7 @@ class ExportHelper
         switch ($xml_destination){
             case PluginConfiguration::STANDARD_DESTINATION:
                 if ($pluginVariant == 'DE') {
-                    $fileName = 'B2C_FBA' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
+                    $fileName = 'B2C_FBA_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat(
                             "HHmm"
                         ) . '-' . $batchNo . '.xml';
                 } else {

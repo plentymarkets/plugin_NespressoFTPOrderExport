@@ -90,8 +90,12 @@ class OrderExportService
     {
         $this->exportHelper->addHistoryData('Start processing order ' . $order->id, $order->id);
 
-        $isB2B = $this->orderHelper->isB2B($order, $this->pluginVariant);
         $isFBM = $this->orderHelper->isFBM($order, $this->pluginVariant);
+        if ($isFBM){
+            $isB2B = false;
+        } else {
+            $isB2B = $this->orderHelper->isB2B($order, $this->pluginVariant);
+        }
         $xml_destination = 0;
         if ($this->pluginVariant == 'DE') {
             if ($isFBM) {
