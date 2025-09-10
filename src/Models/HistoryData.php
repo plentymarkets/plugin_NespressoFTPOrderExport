@@ -9,6 +9,11 @@ class HistoryData extends Model implements \JsonSerializable
     /**
      * @var int
      */
+    public $id;
+
+    /**
+     * @var int
+     */
     public $plentyOrderId;
 
     /**
@@ -21,9 +26,9 @@ class HistoryData extends Model implements \JsonSerializable
      */
     public $savedAt;
 
-    protected $primaryKeyFieldName     = 'plentyOrderId';
+    protected $primaryKeyFieldName     = 'id';
     protected $primaryKeyFieldType     = self::FIELD_TYPE_INT;
-    protected $autoIncrementPrimaryKey = false;
+    protected $autoIncrementPrimaryKey = true;
 
     /**
      * @return string
