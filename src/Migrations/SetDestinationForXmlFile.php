@@ -15,12 +15,16 @@ class SetDestinationForXmlFile extends Migration
      */
     public function run(Builder $schema)
     {
-        $schema->table('plugin_nespresso_f_t_p_order_export__export_stack', function (Blueprint $table) {
-            $table->dropColumn('isB2B');
-        });
-        $schema->table('plugin_nespresso_f_t_p_order_export__export_stack', function (Blueprint $table) {
-            $table->integer('xml_destination')->default(0);
-        });
+        if ($schema->hasColumn('plugin_nespresso_f_t_p_order_export__export_stack', 'isB2B')) {
+            $schema->table('plugin_nespresso_f_t_p_order_export__export_stack', function (Blueprint $table) {
+                $table->dropColumn('isB2B');
+            });
+        }
+        if (!$schema->hasColumn('plugin_nespresso_f_t_p_order_export__export_stack', 'xml_destination')) {
+            $schema->table('plugin_nespresso_f_t_p_order_export__export_stack', function (Blueprint $table) {
+                $table->integer('xml_destination')->default(0);
+            });
+        }
     }
 
     protected function rollback(Builder $schema)
