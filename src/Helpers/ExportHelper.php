@@ -4,19 +4,19 @@ namespace NespressoFTPOrderExport\Helpers;
 
 use Carbon\Carbon;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
-use NespressoFTPOrderExport\Contracts\HistoryDataRepositoryContract;
+use NespressoFTPOrderExport\Repositories\HistoryDataRepository;
 use Plenty\Modules\Order\Models\Order;
 
 class ExportHelper
 {
 
     /**
-     * @var HistoryDataRepositoryContract
+     * @var HistoryDataRepository
      */
     private $historyData;
 
     public function __construct(
-        HistoryDataRepositoryContract $historyData
+        HistoryDataRepository $historyData
     )
     {
         $this->historyData = $historyData;
