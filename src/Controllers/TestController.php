@@ -97,7 +97,25 @@ class TestController extends Controller
         $exportService->sendDataToClient();
     }
 
+    /**
+     * @param $number
+     * @return void
+     * @throws \Plenty\Exceptions\ValidationException
+     */
     public function setBatchNumberForB2B($number)
+    {
+        /** @var SettingRepository $settingRepository */
+        $settingRepository = pluginApp(SettingRepository::class);
+        $batchField = $settingRepository->getBatchName(PluginConfiguration::B2B_DESTINATION);
+        $settingRepository->save($batchField, $number);
+    }
+
+    /**
+     * @param $number
+     * @return void
+     * @throws \Plenty\Exceptions\ValidationException
+     */
+    public function setBatchNumberForB2C($number)
     {
         /** @var SettingRepository $settingRepository */
         $settingRepository = pluginApp(SettingRepository::class);
