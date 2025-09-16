@@ -102,6 +102,6 @@ class TestController extends Controller
         /** @var SettingRepository $settingRepository */
         $settingRepository = pluginApp(SettingRepository::class);
         $batchField = $settingRepository->getBatchName(PluginConfiguration::STANDARD_DESTINATION);
-        $this->save($batchField, $number);
+        $settingRepository->save($batchField, $number);
     }
 }
