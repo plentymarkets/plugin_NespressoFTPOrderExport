@@ -66,7 +66,7 @@ class SettingRepository implements SettingRepositoryContract
      * @param int $xml_destination
      * @return string
      */
-    private function getBatchName(int $xml_destination)
+    public function getBatchName(int $xml_destination)
     {
         switch ($xml_destination){
             case PluginConfiguration::STANDARD_DESTINATION:

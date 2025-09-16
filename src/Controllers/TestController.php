@@ -99,7 +99,9 @@ class TestController extends Controller
 
     public function setBatchNumberForB2B($number)
     {
-        $batchField = $this->getBatchName(PluginConfiguration::STANDARD_DESTINATION);
+        /** @var SettingRepository $settingRepository */
+        $settingRepository = pluginApp(SettingRepository::class);
+        $batchField = $settingRepository->getBatchName(PluginConfiguration::STANDARD_DESTINATION);
         $this->save($batchField, $number);
     }
 }
