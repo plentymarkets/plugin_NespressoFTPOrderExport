@@ -154,7 +154,7 @@ class SettingRepository implements SettingRepositoryContract
     public function getB2BProductList()
     {
         $productList = $this->get('b2b_productList');
-        if ($productList !== '')
+        if (($productList !== '') && ($productList != NULL))
             return json_decode($productList, true);
         return [];
     }
