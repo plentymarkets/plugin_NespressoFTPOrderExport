@@ -4,9 +4,9 @@ namespace NespressoFTPOrderExport\Migrations;
 
 use Plenty\Modules\Plugin\DataBase\Contracts\Migrate;
 use Plenty\Modules\Plugin\Exceptions\MySQLMigrateException;
-use NespressoFTPOrderExport\Models\Setting;
+use NespressoFTPOrderExport\Models\TableRow;
 
-class CreateNespressoSettingsTable
+class CreateNespressoExportTable1
 {
     /**
      * @param  Migrate  $migrate
@@ -14,11 +14,11 @@ class CreateNespressoSettingsTable
      */
     public function run(Migrate $migrate)
     {
-        $migrate->createTable(Setting::class);
+        $migrate->createTable(TableRow::class);
     }
 
     protected function rollback(Migrate $migrate)
     {
-        $migrate->deleteTable(Setting::class);
+        $migrate->deleteTable(TableRow::class);
     }
 }

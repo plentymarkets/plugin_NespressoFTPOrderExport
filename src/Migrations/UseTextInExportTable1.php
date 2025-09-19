@@ -6,7 +6,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 use Plenty\DataBase\Migrations\Migration;
 
-class UseTextInExportTable extends Migration
+class UseTextInExportTable1 extends Migration
 {
     /**
      * Run the migrations.

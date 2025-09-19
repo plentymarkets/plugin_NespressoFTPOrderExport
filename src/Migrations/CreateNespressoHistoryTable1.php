@@ -6,7 +6,7 @@ use Plenty\Modules\Plugin\DataBase\Contracts\Migrate;
 use Plenty\Modules\Plugin\Exceptions\MySQLMigrateException;
 use NespressoFTPOrderExport\Models\HistoryData;
 
-class CreateNespressoHistoryTable
+class CreateNespressoHistoryTable1
 {
     /**
      * @param  Migrate  $migrate
