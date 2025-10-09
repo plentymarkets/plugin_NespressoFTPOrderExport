@@ -118,10 +118,16 @@ class OrderExportService
 
         if ($this->pluginVariant == 'DE') {
             $deliveryAddress['contact'] = ($orderDeliveryName1 != '') ? $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3 : '';
+        } else {
+            $deliveryAddress['contact'] = ($order->deliveryAddress->companyName != '') ? $orderDeliveryName1 : '';
         }
 
         $deliveryAddress['civility'] = ($this->pluginVariant == 'DE') ? 5 : 10;
-        $deliveryAddress['extra_name'] = $this->exportHelper->getDeliveryExtraNameValue($order, $this->pluginVariant, $orderDeliveryName1);
+
+        if ($this->pluginVariant == 'DE') {
+            $deliveryAddress['extra_name'] = '';
+        }
+
         $deliveryAddress['address_line1'] = $this->exportHelper->getDeliveryAddressLine1Value($order, $this->pluginVariant);
         $deliveryAddress['address_line2'] = $this->exportHelper->getDeliveryAddressLine2Value($order, $this->pluginVariant, $orderDeliveryName1, $deliveryAddress['address_line1']);
 
@@ -159,9 +165,13 @@ class OrderExportService
             $invoiceAddress['first_name'] = ($orderBillingName1 != '') ? '' : $order->billingAddress->name2;
             if ($this->pluginVariant == 'DE') {
                 $invoiceAddress['contact'] = ($orderBillingName1 != '') ? $order->billingAddress->name2 . ' ' . $order->billingAddress->name3 : '';
+            } else {
+                $invoiceAddress['contact'] = ($order->billingAddress->companyName != '') ? $order->billingAddress->name2 . ' ' . $order->billingAddress->name3 : '';
             }
             $invoiceAddress['civility'] = ($this->pluginVariant == 'DE') ? 5 : 10;
-            $invoiceAddress['extra_name'] = $this->exportHelper->getInvoiceExtraNameValue($order, $this->pluginVariant);
+            if ($this->pluginVariant == 'DE') {
+                $invoiceAddress['extra_name'] = '';
+            }
             $invoiceAddress['address_line1'] = $this->exportHelper->getInvoiceAddressLine1Value($order, $this->pluginVariant);
             $invoiceAddress['address_line2'] = $this->exportHelper->getInvoiceAddressLine2Value($order, $this->pluginVariant, $orderBillingName1, $invoiceAddress['address_line1']);
 
