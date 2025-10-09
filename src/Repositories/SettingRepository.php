@@ -2,11 +2,12 @@
 
 namespace NespressoFTPOrderExport\Repositories;
 
+use NespressoFTPOrderExport\Configuration\PluginConfiguration;
+use NespressoFTPOrderExport\Contracts\SettingRepositoryContract;
+use NespressoFTPOrderExport\Models\Setting;
 use Plenty\Exceptions\ValidationException;
 use Plenty\Modules\Plugin\DataBase\Contracts\DataBase;
 use Plenty\Modules\Plugin\DataBase\Contracts\Model;
-use NespressoFTPOrderExport\Contracts\SettingRepositoryContract;
-use NespressoFTPOrderExport\Models\Setting;
 
 class SettingRepository implements SettingRepositoryContract
 {
@@ -62,17 +63,34 @@ class SettingRepository implements SettingRepositoryContract
     }
 
     /**
-     * @param $isB2B
+     * @param int $xml_destination
+     * @return string
+     */
+    public function getBatchName(int $xml_destination)
+    {
+        switch ($xml_destination){
+            case PluginConfiguration::STANDARD_DESTINATION:
+                $batchField = 'batch_number';
+                break;
+            case PluginConfiguration::B2B_DESTINATION:
+                $batchField = 'batch_number_b2b';
+                break;
+            case PluginConfiguration::FBM_DESTINATION:
+                $batchField = 'batch_number_fbm';
+                break;
+        }
+        return $batchField;
+    }
+
+    /**
+     * @param int $xml_destination
      * @return string
      * @throws ValidationException
      */
-    public function getBatchNumber($isB2B): string
+    public function getBatchNumber(int $xml_destination): string
     {
-        if (!$isB2B){
-            $batchField = 'batch_number';
-        } else {
-            $batchField = 'batch_number_b2b';
-        }
+        $batchField = $this->getBatchName($xml_destination);
+
         $batch = $this->get($batchField);
         if ($batch === null){
             $this->save($batchField, 1);
@@ -113,19 +131,15 @@ class SettingRepository implements SettingRepositoryContract
     }
 
     /**
-     * @param $isB2B
+     * @param int $xml_destination
      * @return void
      * @throws ValidationException
      */
-    public function incrementBatchNumber($isB2B): void
+    public function incrementBatchNumber(int $xml_destination): void
     {
-        $batch = $this->getBatchNumber($isB2B);
+        $batch = $this->getBatchNumber($xml_destination);
         $nextBatch = (int)$batch + 1;
-        if (!$isB2B){
-            $batchField = 'batch_number';
-        } else {
-            $batchField = 'batch_number_b2b';
-        }
+        $batchField = $this->getBatchName($xml_destination);
         $this->save($batchField, $nextBatch);
     }
 
@@ -140,7 +154,7 @@ class SettingRepository implements SettingRepositoryContract
     public function getB2BProductList()
     {
         $productList = $this->get('b2b_productList');
-        if ($productList !== '')
+        if (($productList !== '') && ($productList != NULL))
             return json_decode($productList, true);
         return [];
     }

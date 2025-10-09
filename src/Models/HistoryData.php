@@ -4,8 +4,13 @@ namespace NespressoFTPOrderExport\Models;
 
 use Plenty\Modules\Plugin\DataBase\Contracts\Model;
 
-class TableRow extends Model implements \JsonSerializable
+class HistoryData extends Model implements \JsonSerializable
 {
+    /**
+     * @var int
+     */
+    public $id;
+
     /**
      * @var int
      */
@@ -14,33 +19,23 @@ class TableRow extends Model implements \JsonSerializable
     /**
      * @var string
      */
-    public $exportedData;
+    public $message;
 
     /**
      * @var string
      */
     public $savedAt;
 
-    /**
-     * @var string
-     */
-    public $sentAt;
-
-    /**
-     * @var int
-     */
-    public $xml_destination;
-
-    protected $primaryKeyFieldName     = 'plentyOrderId';
+    protected $primaryKeyFieldName     = 'id';
     protected $primaryKeyFieldType     = self::FIELD_TYPE_INT;
-    protected $autoIncrementPrimaryKey = false;
+    protected $autoIncrementPrimaryKey = true;
 
     /**
      * @return string
      */
     public function getTableName(): string
     {
-        return 'NespressoFTPOrderExport::export_stack';
+        return 'NespressoFTPOrderExport::history_data';
     }
 
     /**
@@ -54,10 +49,8 @@ class TableRow extends Model implements \JsonSerializable
     {
         return [
             'plentyOrderId'    => $this->plentyOrderId,
-            'exportedData'     => $this->exportedData,
-            'savedAt'          => $this->savedAt,
-            'sentdAt'          => $this->sentAt,
-            'xml_destination'  => $this->xml_destination
+            'message'          => $this->message,
+            'savedAt'          => $this->savedAt
         ];
     }
 }

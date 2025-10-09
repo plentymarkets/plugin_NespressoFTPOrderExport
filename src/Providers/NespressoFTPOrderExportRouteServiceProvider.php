@@ -21,6 +21,9 @@ class NespressoFTPOrderExportRouteServiceProvider extends RouteServiceProvider
                 $apiRouter->get('NespressoFTPOrderExport/getB2BProductList/', 'TestController@getB2BProductList');
                 $apiRouter->put('NespressoFTPOrderExport/addProductCode/{newProductCode}', 'TestController@addProductCode');
                 $apiRouter->put('NespressoFTPOrderExport/deleteProductCode/{productCode}', 'TestController@deleteProductCode');
+                $apiRouter->get('NespressoFTPOrderExport/callExportXml/', 'TestController@callExportXml');
+                $apiRouter->put('NespressoFTPOrderExport/set_b2c_batch_number/{number}', 'TestController@setBatchNumberForB2C');
+                $apiRouter->put('NespressoFTPOrderExport/set_b2b_batch_number/{number}', 'TestController@setBatchNumberForB2B');
             }
         );
     }

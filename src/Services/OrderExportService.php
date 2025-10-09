@@ -5,11 +5,11 @@ namespace NespressoFTPOrderExport\Services;
 use Carbon\Carbon;
 use NespressoFTPOrderExport\Clients\ClientForSFTP;
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
+use NespressoFTPOrderExport\Helpers\ExportHelper;
 use NespressoFTPOrderExport\Helpers\OrderHelper;
 use NespressoFTPOrderExport\Models\TableRow;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
-use Plenty\Modules\Account\Address\Models\AddressOption;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Order\Date\Models\OrderDateType;
 use Plenty\Modules\Order\Models\Order;
@@ -53,13 +53,24 @@ class OrderExportService
    private $orderHelper;
 
     /**
+     * @var ExportHelper
+     */
+   private $exportHelper;
+
+
+    /**
      * @param ClientForSFTP $ftpClient
+     * @param PluginConfiguration $configRepository
+     * @param OrderRepositoryContract $orderRepository
+     * @param OrderHelper $orderHelper
+     * @param ExportHelper $exportHelper
      */
     public function __construct(
         ClientForSFTP           $ftpClient,
         PluginConfiguration     $configRepository,
         OrderRepositoryContract $orderRepository,
-        OrderHelper             $orderHelper
+        OrderHelper             $orderHelper,
+        ExportHelper            $exportHelper
     )
     {
         $this->ftpClient            = $ftpClient;
@@ -68,6 +79,7 @@ class OrderExportService
         $this->totalOrdersPerBatch  = $this->configRepository->getTotalOrdersPerBatch();
         $this->orderRepository      = $orderRepository;
         $this->orderHelper          = $orderHelper;
+        $this->exportHelper         = $exportHelper;
     }
 
     /**
@@ -76,178 +88,105 @@ class OrderExportService
      */
     public function processOrder(Order $order)
     {
-        $deliveryAddress = [];
-        $isB2B = $this->orderHelper->isB2B($order);
+        $this->exportHelper->addHistoryData('Start processing order ' . $order->id, $order->id);
 
-        //dismiss data in name1 if it contains wrong information
-        $orderDeliveryName1 = $order->deliveryAddress->name1;
-        $orderBillingName1 = $order->billingAddress->name1;
-        if ($this->pluginVariant == 'DE') {
-            $wrongContents = ['Stock', 'Etage', 'OG', 'Og', 'Zimmer', 'zimmer', 'Wg', 'Floor', 'floor'];
-            foreach ($wrongContents as $wrongContent) {
-                if (strpos($order->deliveryAddress->name1, $wrongContent) !== false) {
-                    $orderDeliveryName1 = '';
-                }
-                if (strpos($order->billingAddress->name1, $wrongContent) !== false) {
-                    $orderBillingName1 = '';
-                }
-            }
-            if (
-                (strpos(strtolower($order->deliveryAddress->name1), 'raum') !== false) &&
-                (preg_match('/\s\d/', $orderDeliveryName1))
-            ){
-                $orderDeliveryName1 = '';
-            }
-            if (
-                (strpos(strtolower($order->billingAddress->name1), 'raum') !== false) &&
-                (preg_match('/\s\d/', $orderBillingName1))
-            ){
-                $orderBillingName1 = '';
-            }
-        }
-
-        if ($orderDeliveryName1 != '') {
-            if ($this->pluginVariant == 'DE') {
-                $deliveryAddress['company'] = 1;
-                $deliveryAddress['name'] = $orderDeliveryName1;
-                $deliveryAddress['first_name'] = '';
-                $deliveryAddress['contact'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
-            } else {
-                $deliveryAddress['company'] = 1;
-                $deliveryAddress['name'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
-                $deliveryAddress['first_name'] = '';
-            }
+        $isFBM = $this->orderHelper->isFBM($order, $this->pluginVariant);
+        if ($isFBM){
+            $isB2B = false;
         } else {
-            if ($this->pluginVariant == 'DE') {
-                $deliveryAddress['company'] = '0';
-                $deliveryAddress['name'] = $order->deliveryAddress->name3;
-                $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
-                $deliveryAddress['contact'] = '';
+            $isB2B = $this->orderHelper->isB2B($order, $this->pluginVariant);
+        }
+        $xml_destination = 0;
+        if ($this->pluginVariant == 'DE') {
+            if ($isFBM) {
+                $xml_destination = 2;
             } else {
-                $deliveryAddress['company'] = '0';
-                $deliveryAddress['name'] = $order->deliveryAddress->name3;
-                $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
+                if ($isB2B){
+                    $xml_destination = 1;
+                }
             }
         }
+
+        $namesFromOrder = $this->exportHelper->getNamesFromOrder($order, $this->pluginVariant);
+        $orderDeliveryName1 = $namesFromOrder['orderDeliveryName1'];
+        $orderBillingName1  = $namesFromOrder['orderBillingName1'];
+
+        $deliveryAddress = [];
+        $deliveryAddress['company'] = ($orderDeliveryName1 != '') ? 1 : 0;
+        $deliveryAddress['name'] = $this->exportHelper->getDeliveryNameValue($order, $this->pluginVariant, $orderDeliveryName1);
+        $deliveryAddress['first_name'] = ($orderDeliveryName1 != '') ? '' : $order->deliveryAddress->name2;
+
         if ($this->pluginVariant == 'DE') {
-            $deliveryAddress['civility'] = 5;
-            $deliveryAddress['extra_name'] = '';
+            $deliveryAddress['contact'] = ($orderDeliveryName1 != '') ? $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3 : '';
+        }
+
+        $deliveryAddress['civility'] = ($this->pluginVariant == 'DE') ? 5 : 10;
+        $deliveryAddress['extra_name'] = $this->exportHelper->getDeliveryExtraNameValue($order, $this->pluginVariant, $orderDeliveryName1);
+        $deliveryAddress['address_line1'] = $this->exportHelper->getDeliveryAddressLine1Value($order, $this->pluginVariant);
+        $deliveryAddress['address_line2'] = $this->exportHelper->getDeliveryAddressLine2Value($order, $this->pluginVariant, $orderDeliveryName1, $deliveryAddress['address_line1']);
+
+        //fix for DE Packstation case
+        if ($this->pluginVariant == 'DE') {
             if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
                 $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
                 $deliveryAddress['name'] = $order->deliveryAddress->name3;
                 $deliveryAddress['company'] = 0;
                 $deliveryAddress['contact'] = '';
-                $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->packstationNo;
-                $deliveryAddress['address_line2'] = $orderDeliveryName1;
-            } else {
-                $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
-                $deliveryAddress['address_line2'] = '';
-            }
-        } else {
-            $deliveryAddress['civility'] = 10;
-            if ($order->deliveryAddress->companyName != '') {
-                $deliveryAddress['extra_name'] = $orderDeliveryName1;
-            } else {
-                $deliveryAddress['extra_name'] = '';
-            }
-            $deliveryAddress['address_line1'] = $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
-            if (strlen($deliveryAddress['address_line1']) > 35){
-                $deliveryAddress['address_line2'] = substr(
-                    $deliveryAddress['address_line1'],
-                    35,
-                    strlen($deliveryAddress['address_line1']) - 35);
-            } else {
-                $deliveryAddress['address_line2'] = '';
             }
         }
+
         $deliveryAddress['post_code'] = $order->deliveryAddress->postalCode;
         if ($this->pluginVariant == 'AT') {
-            $deliveryAddress['post_code'] = preg_replace("/[^0-9]/", "", $deliveryAddress['post_code'] );
+            preg_replace("/[^0-9]/", "", $deliveryAddress['post_code']);
         }
+
         $deliveryAddress['city'] = $order->deliveryAddress->town;
         $deliveryAddress['country'] = $order->deliveryAddress->country->isoCode2;
+        $deliveryAddress['area1'] = ($this->pluginVariant == 'DE') ? '' : $order->deliveryAddress->country->isoCode2;
         if ($this->pluginVariant == 'DE') {
-            $deliveryAddress['area1'] = '';
             $deliveryAddress['area2'] = '';
-            $deliveryAddress['remark'] = '';
-        } else {
-            $deliveryAddress['area1'] = $order->deliveryAddress->country->isoCode2;
-            $deliveryAddress['remark'] = $order->id;
         }
+        $deliveryAddress['remark'] = ($this->pluginVariant == 'DE') ? '' : $order->id;
+
 
         $customer = [];
 
         $invoiceAddress = [];
         $customer['address_different'] = (int)($order->deliveryAddress->id != $order->billingAddress->id);
         if ($customer['address_different']) {
-            if ($orderBillingName1 != '') {
-                if ($this->pluginVariant == 'DE') {
-                    $invoiceAddress['company'] = '1';
-                    $invoiceAddress['name'] = $orderBillingName1;
-                    $invoiceAddress['first_name'] = '';
-                    $invoiceAddress['contact'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
-                } else {
-                    $invoiceAddress['company'] = '1';
-                    $invoiceAddress['name'] = $orderBillingName1;
-                    $invoiceAddress['first_name'] = '';
-                }
-            } else {
-                if ($this->pluginVariant == 'DE') {
-                    $invoiceAddress['company'] = '0';
-                    $invoiceAddress['name'] = $order->billingAddress->name3;
-                    $invoiceAddress['first_name'] = $order->billingAddress->name2;
-                    $invoiceAddress['contact'] = '';
-                } else {
-                    $invoiceAddress['company'] = '0';
-                    $invoiceAddress['name'] = $order->billingAddress->name3;
-                    $invoiceAddress['first_name'] = $order->billingAddress->name2;
-                }
-            }
+            $invoiceAddress['company'] = ($orderBillingName1 != '') ? '1' : '0';
+            $invoiceAddress['name'] = $this->exportHelper->getInvoiceNameValue($order, $this->pluginVariant, $orderBillingName1);
+            $invoiceAddress['first_name'] = ($orderBillingName1 != '') ? '' : $order->billingAddress->name2;
             if ($this->pluginVariant == 'DE') {
-                $invoiceAddress['civility'] = 5;
-                $invoiceAddress['extra_name'] = '';
+                $invoiceAddress['contact'] = ($orderBillingName1 != '') ? $order->billingAddress->name2 . ' ' . $order->billingAddress->name3 : '';
+            }
+            $invoiceAddress['civility'] = ($this->pluginVariant == 'DE') ? 5 : 10;
+            $invoiceAddress['extra_name'] = $this->exportHelper->getInvoiceExtraNameValue($order, $this->pluginVariant);
+            $invoiceAddress['address_line1'] = $this->exportHelper->getInvoiceAddressLine1Value($order, $this->pluginVariant);
+            $invoiceAddress['address_line2'] = $this->exportHelper->getInvoiceAddressLine2Value($order, $this->pluginVariant, $orderBillingName1, $invoiceAddress['address_line1']);
+
+            //fix for DE Packstation case
+            if ($this->pluginVariant == 'DE') {
                 if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
                     $invoiceAddress['first_name'] = $order->billingAddress->name2;
                     $invoiceAddress['name'] = $order->billingAddress->name3;
                     $invoiceAddress['company'] = 0;
                     $invoiceAddress['contact'] = '';
-                    $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->packstationNo;
-                    $invoiceAddress['address_line2'] = $orderBillingName1;
-                } else {
-                    $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
-                    $invoiceAddress['address_line2'] = '';
-                }
-            } else {
-                $invoiceAddress['civility'] = 10;
-                if ($order->billingAddress->companyName != '') {
-                    $invoiceAddress['extra_name'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
-                } else {
-                    $invoiceAddress['extra_name'] = '';
-                }
-                $invoiceAddress['address_line1'] = $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
-                if (strlen($invoiceAddress['address_line1']) > 35){
-                    $invoiceAddress['address_line2'] = substr(
-                        $invoiceAddress['address_line1'],
-                        35,
-                        strlen($invoiceAddress['address_line1']) - 35);
-                } else {
-                    $invoiceAddress['address_line2'] = '';
                 }
             }
-
 
             $invoiceAddress['post_code'] = $order->billingAddress->postalCode;
             if ($this->pluginVariant == 'AT') {
-                $invoiceAddress['post_code'] = preg_replace("/[^0-9]/", "", $invoiceAddress['post_code'] );
+                preg_replace("/[^0-9]/", "", $invoiceAddress['post_code']);
             }
+
             $invoiceAddress['city'] = $order->billingAddress->town;
             $invoiceAddress['country'] = $order->billingAddress->country->isoCode2;
+
+            $invoiceAddress['area1'] = ($this->pluginVariant == 'DE') ? '' : $order->billingAddress->country->isoCode2;
             if ($this->pluginVariant == 'DE') {
-                $invoiceAddress['area1'] = '';
                 $invoiceAddress['area2'] = '';
                 $invoiceAddress['remark'] = '';
-            } else {
-                $invoiceAddress['area1'] = $order->billingAddress->country->isoCode2;
             }
         }
         $contactPreference = [];
@@ -333,12 +272,8 @@ class OrderExportService
         $customer['delivery_address'] = $deliveryAddress;
         if ($this->pluginVariant == 'DE') {
             $customer['state_inscription_number'] = '';
-            $customer['vat_number'] = '';
-            if ($orderBillingName1 != '') {
-                $customer['company'] = '1';
-            } else {
-                $customer['company'] = '0';
-            }
+            $customer['vat_number'] = $order->billingAddress->taxIdNumber;
+            $customer['company'] = ($orderBillingName1 != '') ? '1' : '0';
         }
         $customer['invoice_address'] = $invoiceAddress;
         $customer['contact_preference'] = $contactPreference;
@@ -350,39 +285,25 @@ class OrderExportService
 
         $orderData = [];
         $orderData['client_id'] = $this->getCustomerId($order);
+        $orderData['external_order_id'] = $order->id;
+
+        $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+
+        $orderData['movement_code'] = $this->exportHelper->getMovementCodeValue($this->pluginVariant, $isB2B, $isFBM);
+
         if ($this->pluginVariant == 'DE') {
-            $orderData['external_order_id'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID) . '_' . $order->id;
-            if ($isB2B){
-                $orderData['movement_code'] = "71";
-            } else {
-                $orderData['movement_code'] = "3";
-            }
             $orderData['order_date'] = $order->dates->filter(
                 function ($date) {
                     return $date->typeId == OrderDateType::ORDER_ENTRY_AT;
                 }
             )->first()->date->isoFormat("DD/MM/YYYY");
-        } else {
-            $orderData['external_order_id'] = $order->id;
-            $orderData['third_reference'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
-            $orderData['movement_code'] = "2010";
         }
-        if (($this->pluginVariant == 'DE') && $isB2B) {
-            $orderData['order_source'] = 'AMB';
-        } else {
-            $orderData['order_source'] = 'AMZ';
-        }
-        if ($this->pluginVariant == 'DE') {
-            $orderData['delivery_mode'] = 'VZ';
-            if ($isB2B) {
-                $orderData['payment_mode'] = 'XB';
-            } else {
-                $orderData['payment_mode'] = 'XA';
-            }
-        } else {
-            $orderData['delivery_mode'] = 'GP';
-            $orderData['payment_mode'] = 'AM';
-        }
+
+
+        $orderData['order_source'] = $this->exportHelper->getSourceCodeValue($this->pluginVariant, $isB2B);
+        $orderData['delivery_mode'] = $this->exportHelper->getDeliveryModeValue($this->pluginVariant, $isFBM);
+        $orderData['payment_mode'] = $this->exportHelper->getPaymentModeValue($this->pluginVariant, $isB2B);
+
         if ($this->pluginVariant == 'AT') {
             $orderData['force_stock'] = 'GW3';
             $orderData['order_description'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
@@ -406,24 +327,24 @@ class OrderExportService
 
         if ($this->pluginVariant == 'DE') {
             $record['record_remarks'] = "";
-            $record['external_ref'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID) . '_' . $order->id;
-        } else {
-            $record['external_ref'] = $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
         }
+
+        $record['external_ref'] = ($this->pluginVariant == 'DE') ?
+            $order->id :
+            $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
+
+
         if ($this->pluginVariant == 'AT') {
             $record['identification_mode'] = "N";
         }
+
         if ($this->pluginVariant == 'DE') {
             $record['member_number'] = "";
         }
+
         $record['address_changed'] = 1;
-        if (($this->pluginVariant == 'DE') && $isB2B) {
-            $record['order_source'] = "AMB";
-            $record['channel'] = "33";
-        } else {
-            $record['order_source'] = "AMZ";
-            $record['channel'] = "32";
-        }
+        $record['order_source'] = $this->exportHelper->getOrderSourceValue($this->pluginVariant, $isB2B);
+        $record['channel'] = $this->exportHelper->getChannelValue($this->pluginVariant, $isB2B);
         $record['customer'] = $customer;
         $record['order'] = $orderData;
 
@@ -494,7 +415,9 @@ class OrderExportService
             }
         }
 
-        $this->saveRecord($order->id, $record, $isB2B);
+        $this->saveRecord($order->id, $record, $xml_destination);
+
+        $this->exportHelper->addHistoryData('End processing order ' . $order->id, $order->id);
     }
 
     /**
@@ -520,14 +443,14 @@ class OrderExportService
      * @param array $record
      * @return bool
      */
-    public function saveRecord(int $plentyOrderId, array $record, bool $isB2B){
+    public function saveRecord(int $plentyOrderId, array $record, int $xml_destination){
 
         $exportData = [
             'plentyOrderId'    => $plentyOrderId,
             'exportedData'     => json_encode($record),
             'savedAt'          => Carbon::now()->toDateTimeString(),
             'sentdAt'          => '',
-            'isB2B'            => $isB2B
+            'xml_destination'  => $xml_destination
         ];
 
         /** @var ExportDataRepository $exportDataRepository */
@@ -536,36 +459,18 @@ class OrderExportService
             if (!$exportDataRepository->orderExists($plentyOrderId)) {
                 /** @var TableRow $savedObject */
                 $exportDataRepository->save($exportData);
-
-                //test logs
-                $this->getLogger(__METHOD__)
-                    ->addReference('orderId', $plentyOrderId)
-                    ->debug(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
-                        'message'           => 'Saved to export stack',
-                    ]);
-                if ($exportDataRepository->orderExists($plentyOrderId)){
-                    $this->getLogger(__METHOD__)
-                        ->addReference('orderId', $plentyOrderId)
-                        ->debug(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
-                            'message'           => 'Record found',
-                        ]);
-                } else {
-                    $this->getLogger(__METHOD__)
-                        ->addReference('orderId', $plentyOrderId)
-                        ->error(PluginConfiguration::PLUGIN_NAME . '::general.logMessage', [
-                            'message'           => 'The record was not found',
-                        ]);
-                }
-
+                $this->exportHelper->addHistoryData('Saved to export stack', $plentyOrderId);
                 $statusOfProcessedOrder = $this->configRepository->getProcessedOrderStatus();
                 if ($statusOfProcessedOrder != ''){
                     $this->orderRepository->updateOrder(['statusId' => $statusOfProcessedOrder], $plentyOrderId);
+                    $this->exportHelper->addHistoryData('Order status updated to ' . $statusOfProcessedOrder, $plentyOrderId);
                 }
                 return true;
             }
             $this->getLogger(__METHOD__)
                 ->addReference('orderId', $plentyOrderId)
                 ->report(PluginConfiguration::PLUGIN_NAME . '::error.orderExists', $exportData);
+            $this->exportHelper->addHistoryData('Order already exists in the export stack', $plentyOrderId);
             return false;
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)
@@ -575,17 +480,9 @@ class OrderExportService
                     'message'     => $e->getMessage(),
                     'exportData'  => $exportData
                 ]);
+            $this->exportHelper->addHistoryData('Exception when writing to the export table: ' . $e->getMessage(), $plentyOrderId);
         }
         return false;
-    }
-
-    /**
-     * @return string
-     */
-    public function getBatchNumber($isB2B): string
-    {
-        $settingsRepository = pluginApp(SettingRepository::class);
-        return $settingsRepository->getBatchNumber($isB2B);
     }
 
     public function escapeValue($value)
@@ -642,31 +539,23 @@ class OrderExportService
     }
 
     /**
-     * @param TableRow[] $exportList
-     * @param string $generationTime
-     * @param string $batchNo
+     * @param $exportList
+     * @param $generationTime
+     * @param $batchNo
+     * @param int $xml_destination
      * @return string
      */
-    public function generateXMLFromOrderData($exportList, $generationTime, $batchNo, $isB2B): string
+    public function generateXMLFromOrderData($exportList, $generationTime, $batchNo, int $xml_destination): string
     {
-        if ($this->pluginVariant == 'DE'){
-            if ($isB2B){
-                $senderId = 90;
-            } else {
-                $senderId = 89;
-            }
-        } else {
-            $senderId = 86;
-        }
         $resultedXML = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <import_batch version_number="1.0" xmlns="http://nesclub.nespresso.com/webservice/club/xsd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nesclub.nespresso.com/webservice/club/xsd/ http://nesclub.nespresso.com/webservice/club/xsd/">
   	<!-- HEADER STARTS HERE--> 
 	<batch_date_time>'.$generationTime.'</batch_date_time>
 	<batch_number>'.$batchNo.'</batch_number> <!-- Batch Number is continous, starting with 01 -->
-	<sender_id>'.$senderId.'</sender_id>
+	<sender_id>'.$this->exportHelper->getSenderIdValue($this->pluginVariant, $xml_destination).'</sender_id>
 ';
         if ($this->pluginVariant == 'AT') {
-            $resultedXML .= '<entity>5</entity>';
+            $resultedXML .= "<entity>5</entity>\n";
         }
 
         $totalQuantities = 0;
@@ -676,6 +565,8 @@ class OrderExportService
         /** @var TableRow $order */
         foreach ($exportList as $order){
             $orderData = json_decode($order->exportedData, true);
+
+            //convert data into XML format with particular attributes
             $resultedXML .= $this->arrayToXml(['record' => $orderData]);
 
             foreach ($orderData['order']['order_details'] as $orderLine){
@@ -706,14 +597,12 @@ class OrderExportService
 
     /**
      * @param string $xmlContent
-     * @param string $filePrefix
-     * @param string $batchNo
-     * @param bool $isB2B
+     * @param string $fileName
+     * @param int $xml_destination
      * @return bool
      */
-    public function sendToFTP(string $xmlContent, string $filePrefix, string $batchNo, bool $isB2B)
+    public function sendToFTP(string $xmlContent, string $fileName, int $xml_destination)
     {
-        $fileName = $filePrefix . '-32-'.$batchNo.'.xml';
         try {
             $this->getLogger(__METHOD__)->info(
                 PluginConfiguration::PLUGIN_NAME . '::general.logMessage',
@@ -722,7 +611,7 @@ class OrderExportService
                     'fileName'=> $fileName
                 ]
             );
-            $result = $this->ftpClient->uploadXML($fileName, $xmlContent, $isB2B);
+            $result = $this->ftpClient->uploadXML($fileName, $xmlContent, $xml_destination);
             if (is_array($result) && array_key_exists('error', $result) && $result['error'] === true) {
                 $this->getLogger(__METHOD__)
                     ->error(PluginConfiguration::PLUGIN_NAME . '::globals.ftpFileUploadError',
@@ -764,6 +653,7 @@ class OrderExportService
                     'exportedData'     => $order->exportedData,
                     'savedAt'          => $order->savedAt,
                     'sentAt'           => $generationTime,
+                    'xml_destination'  => $order->xml_destination
                 ];
                 $exportDataRepository->save($exportData);
             }
@@ -778,77 +668,88 @@ class OrderExportService
     }
 
     /**
-     * @return bool
+     * @return void
      */
     public function sendDataToClient(): bool
     {
         /** @var ExportDataRepository $exportDataRepository */
         $exportDataRepository = pluginApp(ExportDataRepository::class);
+
+        /** @var SettingRepository $settingsRepository */
+        $settingsRepository = pluginApp(SettingRepository::class);
+
+        $this->sendToOneDestination(
+            $exportDataRepository,
+            $settingsRepository,
+            PluginConfiguration::STANDARD_DESTINATION
+        );
+
+        if ($this->pluginVariant == 'DE') {
+            $this->sendToOneDestination(
+                $exportDataRepository,
+                $settingsRepository,
+                PluginConfiguration::B2B_DESTINATION
+            );
+
+            $this->sendToOneDestination(
+                $exportDataRepository,
+                $settingsRepository,
+                PluginConfiguration::FBM_DESTINATION
+            );
+        }
+        return true;
+    }
+
+    /**
+     * @param ExportDataRepository $exportDataRepository
+     * @param SettingRepository $settingsRepository
+     * @param int $xml_destination
+     * @return bool
+     */
+    private function sendToOneDestination(
+        ExportDataRepository $exportDataRepository,
+        SettingRepository $settingsRepository,
+        int $xml_destination
+    )
+    {
         try {
-            $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch);
+            $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch, $xml_destination);
+            if (count($exportList) > 0) {
+                $thisTime = Carbon::now();
+                $generationTime = $thisTime->toDateTimeString();
+                $batchNo = $settingsRepository->getBatchNumber($xml_destination);
+                if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
+                    $batchNo = "2001";
+                    $settingsRepository->incrementBatchNumber($xml_destination);
+                }
+                $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, $xml_destination);
+                if (!$this->sendToFTP(
+                    $xmlContent,
+                    $this->exportHelper->getFileNameForExport(
+                        $thisTime,
+                        $xml_destination,
+                        $this->pluginVariant,
+                        $batchNo),
+                    $xml_destination
+                )) {
+                    $this->exportHelper->addHistoryData('Export to ' . $xml_destination . ' failed!');
+                    return false;
+                }
+
+                $settingsRepository->incrementBatchNumber($xml_destination);
+                $this->markRowsAsSent($exportList, $generationTime);
+                $this->exportHelper->addHistoryData('Export to ' . $xml_destination . ' succeeded! (Batch: '.$batchNo.')');
+            } else {
+                $this->exportHelper->addHistoryData('No data for ' . $xml_destination . ' destination.');
+            }
+
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
                 [
                     'message'     => $e->getMessage(),
                 ]);
+            $this->exportHelper->addHistoryData('Exception when sending to ' . $xml_destination . ' dest.: ' . $e->getMessage());
             return false;
-        }
-
-        $settingsRepository = pluginApp(SettingRepository::class);
-
-        if (count($exportList) > 0) {
-            $thisTime = Carbon::now();
-            $generationTime = $thisTime->toDateTimeString();
-            $batchNo = $this->getBatchNumber(false);
-            if (($this->pluginVariant == 'AT') && ((int)$batchNo == 2000)) {
-                $batchNo = "2001";
-                $settingsRepository->incrementBatchNumber(false);
-            }
-            $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, false);
-            if (!$this->sendToFTP(
-                $xmlContent,
-                $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
-                $batchNo,
-                false
-            )) {
-                return false;
-            }
-
-            $settingsRepository->incrementBatchNumber(false);
-            $this->markRowsAsSent($exportList, $generationTime);
-        }
-
-        if ($this->pluginVariant == 'DE') {
-            //for Nespresso DE, we might have also B2B orders, which we sent separatelly
-            try {
-                $exportList = $exportDataRepository->listUnsent($this->totalOrdersPerBatch, true);
-            } catch (\Throwable $e) {
-                $this->getLogger(__METHOD__)->error(
-                    PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
-                    [
-                        'message' => $e->getMessage(),
-                    ]
-                );
-                return false;
-            }
-
-            if (count($exportList) > 0) {
-                $thisTime = Carbon::now();
-                $generationTime = $thisTime->toDateTimeString();
-                $batchNo = $this->getBatchNumber(true);
-                $xmlContent = $this->generateXMLFromOrderData($exportList, $generationTime, $batchNo, true);
-                if (!$this->sendToFTP(
-                    $xmlContent,
-                    $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm"),
-                    $batchNo,
-                    true
-                )){
-                    return false;
-                }
-
-                $settingsRepository->incrementBatchNumber(true);
-                $this->markRowsAsSent($exportList, $generationTime);
-            }
         }
         return true;
     }

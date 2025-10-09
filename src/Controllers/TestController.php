@@ -4,6 +4,7 @@ namespace NespressoFTPOrderExport\Controllers;
 
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
+use NespressoFTPOrderExport\Services\OrderExportService;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Log\Loggable;
@@ -30,6 +31,9 @@ class TestController extends Controller
         return true;
     }
 
+    /**
+     * @return array|mixed
+     */
     public function getB2BProductList()
     {
         /** @var SettingRepository $settingsRepository */
@@ -37,6 +41,10 @@ class TestController extends Controller
         return $settingsRepository->getB2BProductList();
     }
 
+    /**
+     * @param array $productArray
+     * @return void
+     */
     public function setB2BProductList(array $productArray)
     {
         /** @var SettingRepository $settingsRepository */
@@ -44,6 +52,10 @@ class TestController extends Controller
         $settingsRepository->setB2BProductList($productArray);
     }
 
+    /**
+     * @param string $newProductCode
+     * @return void
+     */
     public function addProductCode(string $newProductCode)
     {
         /** @var SettingRepository $settingsRepository */
@@ -56,6 +68,10 @@ class TestController extends Controller
         }
     }
 
+    /**
+     * @param string $productCode
+     * @return void
+     */
     public function deleteProductCode(string $productCode)
     {
         /** @var SettingRepository $settingsRepository */
@@ -69,5 +85,41 @@ class TestController extends Controller
             $productCodes = array_values($productCodes);
             $settingsRepository->setB2BProductList($productCodes);
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function callExportXml()
+    {
+        /** @var OrderExportService $exportService */
+        $exportService = pluginApp(OrderExportService::class);
+        $exportService->sendDataToClient();
+    }
+
+    /**
+     * @param $number
+     * @return void
+     * @throws \Plenty\Exceptions\ValidationException
+     */
+    public function setBatchNumberForB2B($number)
+    {
+        /** @var SettingRepository $settingRepository */
+        $settingRepository = pluginApp(SettingRepository::class);
+        $batchField = $settingRepository->getBatchName(PluginConfiguration::B2B_DESTINATION);
+        $settingRepository->save($batchField, $number);
+    }
+
+    /**
+     * @param $number
+     * @return void
+     * @throws \Plenty\Exceptions\ValidationException
+     */
+    public function setBatchNumberForB2C($number)
+    {
+        /** @var SettingRepository $settingRepository */
+        $settingRepository = pluginApp(SettingRepository::class);
+        $batchField = $settingRepository->getBatchName(PluginConfiguration::STANDARD_DESTINATION);
+        $settingRepository->save($batchField, $number);
     }
 }

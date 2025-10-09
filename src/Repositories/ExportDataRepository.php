@@ -3,6 +3,7 @@
 namespace NespressoFTPOrderExport\Repositories;
 
 use NespressoFTPOrderExport\Contracts\ExportDataRepositoryContract;
+use NespressoFTPOrderExport\Models\HistoryData;
 use NespressoFTPOrderExport\Models\TableRow;
 use Plenty\Modules\Plugin\DataBase\Contracts\DataBase;
 
@@ -32,7 +33,7 @@ class ExportDataRepository implements ExportDataRepositoryContract
         $tableRow->exportedData     = (string)$data['exportedData'];
         $tableRow->savedAt          = (string)$data['savedAt'];
         $tableRow->sentAt           = (string)$data['sentAt'];
-        $tableRow->isB2B            = (bool)$data['isB2B'];
+        $tableRow->xml_destination  = (int)$data['xml_destination'];
 
         return $this->database->save($tableRow);
     }
@@ -52,21 +53,21 @@ class ExportDataRepository implements ExportDataRepositoryContract
 
     /**
      * @param int $maxRows
-     * @param bool $isB2B
+     * @param int $xml_destination
      * @return TableRow[]
      */
-    public function listUnsent(int $maxRows, bool $isB2B=false)
+    public function listUnsent(int $maxRows, int $xml_destination=0)
     {
         if ($maxRows > 0) {
             return $this->database->query(TableRow::class)
                 ->where('sentAt', '=', '')
-                ->where('isB2B', '=', $isB2B)
+                ->where('xml_destination', '=', $xml_destination)
                 ->limit($maxRows)
                 ->get();
         }
         return $this->database->query(TableRow::class)
             ->where('sentAt', '=', '')
-            ->where('isB2B', '=', $isB2B)
+            ->where('xml_destination', '=', $xml_destination)
             ->get();
     }
 
@@ -93,6 +94,11 @@ class ExportDataRepository implements ExportDataRepositoryContract
     public function deleteOldRecords(string $dateLimit) : void
     {
         $this->database->query(TableRow::class)
+            ->where('sentAt', '!=', '')
+            ->where('sentAt', '<', $dateLimit)
+            ->delete();
+
+        $this->database->query(HistoryData::class)
             ->where('sentAt', '!=', '')
             ->where('sentAt', '<', $dateLimit)
             ->delete();
