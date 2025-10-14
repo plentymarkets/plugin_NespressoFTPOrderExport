@@ -45,7 +45,7 @@ class OrderHelper
 
     public function isFBM(Order $order, string $pluginVariant)
     {
-        if (($pluginVariant == 'DE') && ($order->referrerId == 4.01)) {
+        if (($pluginVariant == 'DE') && (($order->referrerId == 4.01) || ($order->referrerId == 4.21))) {
                 return true;
         }
         return false;
