@@ -749,7 +749,6 @@ class OrderExportService
                 $settingsRepository->incrementBatchNumber($xml_destination);
                 $this->markRowsAsSent($exportList, $generationTime);
                 $this->exportHelper->addHistoryData('Export to ' . $xml_destination . ' succeeded! (Batch: '.$batchNo.')');
-                $this->exportHelper->addHistoryData('Exported orders in batch: '.$batchNo.': '.json_encode($exportList));
             } else {
                 $this->exportHelper->addHistoryData('No data for ' . $xml_destination . ' destination.');
             }
