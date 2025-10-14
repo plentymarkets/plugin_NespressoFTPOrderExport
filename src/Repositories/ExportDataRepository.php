@@ -113,4 +113,16 @@ class ExportDataRepository implements ExportDataRepositoryContract
         $this->database->query(TableRow::class)
             ->delete();
     }
+
+    /**
+     * @param string $plentyOrderId
+     * @return void
+     */
+    public function deleteOneRecord(string $plentyOrderId) : void
+    {
+        $this->database->query(TableRow::class)
+            ->where('plentyOrderId', '=', $plentyOrderId)
+            ->delete();
+    }
+
 }

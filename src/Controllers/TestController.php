@@ -3,6 +3,7 @@
 namespace NespressoFTPOrderExport\Controllers;
 
 use NespressoFTPOrderExport\Configuration\PluginConfiguration;
+use NespressoFTPOrderExport\Helpers\ExportHelper;
 use NespressoFTPOrderExport\Repositories\ExportDataRepository;
 use NespressoFTPOrderExport\Services\OrderExportService;
 use NespressoFTPOrderExport\Repositories\SettingRepository;
@@ -21,6 +22,30 @@ class TestController extends Controller
         $exportDataRepository = pluginApp(ExportDataRepository::class);
         try {
             $exportList = $exportDataRepository->deleteAllRecords();
+        } catch (\Throwable $e) {
+            $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
+                [
+                    'message'     => $e->getMessage(),
+                ]);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param $plentyOrderId
+     * @return bool
+     */
+    public function clearOneOrderFromDataTable($plentyOrderId)
+    {
+        /** @var ExportDataRepository $exportDataRepository */
+        $exportDataRepository = pluginApp(ExportDataRepository::class);
+
+        /** @var ExportHelper $helper */
+        $helper = pluginApp(ExportHelper::class);
+        try {
+            $exportDataRepository->deleteOneRecord($plentyOrderId);
+            $helper->addHistoryData('Clearing ' . $plentyOrderId . ' from export table...');
         } catch (\Throwable $e) {
             $this->getLogger(__METHOD__)->error(PluginConfiguration::PLUGIN_NAME . '::error.readExportError',
                 [
