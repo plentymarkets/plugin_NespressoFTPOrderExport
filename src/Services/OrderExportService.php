@@ -338,12 +338,10 @@ class OrderExportService
         if ($this->pluginVariant == 'DE') {
             $record['record_remarks'] = "";
         }
-        $this->exportHelper->addHistoryData('[TEMP]1' . $order->id, $order->id, json_encode($record));
 
         $record['external_ref'] = ($this->pluginVariant == 'DE') ?
             $order->id :
             $order->getPropertyValue(OrderPropertyType::EXTERNAL_ORDER_ID);
-        $this->exportHelper->addHistoryData('[TEMP]2' . $order->id, $order->id, json_encode($record));
 
 
         if ($this->pluginVariant == 'AT') {
@@ -353,18 +351,12 @@ class OrderExportService
         if ($this->pluginVariant == 'DE') {
             $record['member_number'] = "";
         }
-        $this->exportHelper->addHistoryData('[TEMP]3' . $order->id, $order->id, json_encode($record));
 
         $record['address_changed'] = 1;
-        $this->exportHelper->addHistoryData('[TEMP]4' . $order->id, $order->id, json_encode($record));
         $record['order_source'] = $this->exportHelper->getOrderSourceValue($this->pluginVariant, $isB2B);
-        $this->exportHelper->addHistoryData('[TEMP]5' . $order->id, $order->id, json_encode($record));
         $record['channel'] = $this->exportHelper->getChannelValue($this->pluginVariant, $isB2B);
-        $this->exportHelper->addHistoryData('[TEMP]6' . $order->id, $order->id, json_encode($record));
         $record['customer'] = $customer;
-        $this->exportHelper->addHistoryData('[TEMP]7' . $order->id, $order->id, json_encode($record));
         $record['order'] = $orderData;
-        $this->exportHelper->addHistoryData('[TEMP]8' . $order->id, $order->id, json_encode($record));
 
         //apply maximum number of characters
         if ($this->pluginVariant == 'AT') {
@@ -428,6 +420,7 @@ class OrderExportService
             if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
                 $record['customer']['delivery_address'][$maxNumber['field']] =
                     substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
+                $this->exportHelper->addHistoryData('[TEMP]10  record[\'customer\'][\'delivery_address\']['.$maxNumber['field'].']', $order->id, json_encode($record));
             }
             if (strlen($record['customer']['invoice_address'][$maxNumber['field']]) > $maxNumber['limit']){
                 $record['customer']['invoice_address'][$maxNumber['field']] =
