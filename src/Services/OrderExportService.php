@@ -134,6 +134,7 @@ class OrderExportService
         //fix for DE Packstation case
         if ($this->pluginVariant == 'DE') {
             if (($order->deliveryAddress->isPackstation === true) || $order->deliveryAddress->isPostfiliale === true) {
+                $this->exportHelper->addHistoryData('Delivery Packstation. Change first_name, name, company, contact', $order->id);
                 $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
                 $deliveryAddress['name'] = $order->deliveryAddress->name3;
                 $deliveryAddress['company'] = 0;
@@ -178,6 +179,7 @@ class OrderExportService
             //fix for DE Packstation case
             if ($this->pluginVariant == 'DE') {
                 if (($order->billingAddress->isPackstation === true) || $order->billingAddress->isPostfiliale === true) {
+                    $this->exportHelper->addHistoryData('Billing Packstation. Change first_name, name, company, contact', $order->id);
                     $invoiceAddress['first_name'] = $order->billingAddress->name2;
                     $invoiceAddress['name'] = $order->billingAddress->name3;
                     $invoiceAddress['company'] = 0;
@@ -232,12 +234,14 @@ class OrderExportService
         if ($this->pluginVariant == 'DE') {
             //number or number plus a single letter
             if (preg_match('/\b\d+[a-zA-Z]?\b/', $order->deliveryAddress->address1)){
+                $this->exportHelper->addHistoryData('Rule Delivery Address Number. Change address_line1, name, company, contact', $order->id);
                 $deliveryAddress['address_line1'] = $orderDeliveryName1 . ' ' . $order->deliveryAddress->address1;
                 $deliveryAddress['name'] = $order->deliveryAddress->name3;
                 $deliveryAddress['company'] = '0';
                 $deliveryAddress['contact'] = '';
             }
             if (preg_match('/\b\d+[a-zA-Z]?\b/', $order->billingAddress->address1)){
+                $this->exportHelper->addHistoryData('Rule Invoice Address Number. Change address_line1, name, company, contact', $order->id);
                 $invoiceAddress['address_line1'] = $orderBillingName1 . ' ' . $order->billingAddress->address1;
                 $invoiceAddress['name'] = $order->billingAddress->name3;
                 $invoiceAddress['company'] = '0';
@@ -246,6 +250,7 @@ class OrderExportService
 
             //space plus number
             if (preg_match('/\s\d/', $orderDeliveryName1)) {
+                $this->exportHelper->addHistoryData('Rule Delivery Name Number. Change address_line1, first_name, name, company, contact', $order->id);
                 $deliveryAddress['address_line1'] = $orderDeliveryName1;
                 $deliveryAddress['first_name'] = $order->deliveryAddress->name2;
                 $deliveryAddress['name'] = $order->deliveryAddress->name3;
@@ -253,6 +258,7 @@ class OrderExportService
                 $deliveryAddress['company'] = '0';
             }
             if (preg_match('/\s\d/', $orderBillingName1)) {
+                $this->exportHelper->addHistoryData('Rule Invoice Name Number. Change address_line1, first_name, name, company, contact', $order->id);
                 $invoiceAddress['address_line1'] = $orderBillingName1;
                 $invoiceAddress['first_name'] = $order->billingAddress->name2;
                 $invoiceAddress['name'] = $order->billingAddress->name3;
@@ -267,11 +273,13 @@ class OrderExportService
             $billingName3Array  = array_map('strtolower', explode(' ', $order->billingAddress->name3));
             foreach ($companyMarkers as $companyMarker) {
                 if (in_array(strtolower($companyMarker), $deliveryName3Array)) {
+                    $this->exportHelper->addHistoryData('Rule Company Markers ('.$companyMarker.') DeliveryName3Array. Change first_name, name, company', $order->id);
                     $deliveryAddress['name'] = $order->deliveryAddress->name2 . ' ' . $order->deliveryAddress->name3;
                     $deliveryAddress['company'] = '1';
                     $deliveryAddress['first_name'] = '';
                 }
                 if (in_array(strtolower($companyMarker), $billingName3Array)) {
+                    $this->exportHelper->addHistoryData('Rule Company Markers ('.$companyMarker.') InvoiceName3Array. Change first_name, name, company', $order->id);
                     $invoiceAddress['name'] = $order->billingAddress->name2 . ' ' . $order->billingAddress->name3;
                     $invoiceAddress['company'] = '1';
                     $invoiceAddress['first_name'] = '';
@@ -419,10 +427,12 @@ class OrderExportService
             if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
                 $record['customer']['delivery_address'][$maxNumber['field']] =
                     mb_substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
+                $this->exportHelper->addHistoryData('Reduce delivery ' . $maxNumber['field'] . ' to ' . $maxNumber['limit'], $order->id);
             }
             if (strlen($record['customer']['invoice_address'][$maxNumber['field']]) > $maxNumber['limit']){
                 $record['customer']['invoice_address'][$maxNumber['field']] =
                     mb_substr($record['customer']['invoice_address'][$maxNumber['field']], 0, $maxNumber['limit']);
+                $this->exportHelper->addHistoryData('Reduce invoice ' . $maxNumber['field'] . ' to ' . $maxNumber['limit'], $order->id);
             }
         }
 
