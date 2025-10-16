@@ -414,12 +414,9 @@ class OrderExportService
                 ]
             ];
         }
-        $this->exportHelper->addHistoryData('[TEMP]9' . $order->id, $order->id, json_encode($record));
 
         foreach ($maxNumberList as $maxNumber){
             if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
-                $this->exportHelper->addHistoryData('[TEMP]10  substr', $order->id, substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']));
-                $this->exportHelper->addHistoryData('[TEMP]10  substr', $order->id, mb_substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']));
                 $record['customer']['delivery_address'][$maxNumber['field']] =
                     mb_substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
             }
