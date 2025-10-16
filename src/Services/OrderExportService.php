@@ -418,9 +418,12 @@ class OrderExportService
 
         foreach ($maxNumberList as $maxNumber){
             if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
+                $this->exportHelper->addHistoryData('[TEMP]10  record[...]', $order->id, json_encode($record['customer']['delivery_address'][$maxNumber['field']]));
+                $this->exportHelper->addHistoryData('[TEMP]10  egal', $order->id, json_encode(substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit'])));
+                $this->exportHelper->addHistoryData('[TEMP]10  egal fara json enode', $order->id, substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']));
+                $this->exportHelper->addHistoryData('[TEMP]10  maxNumber[limit]', $order->id, $maxNumber['limit']);
                 $record['customer']['delivery_address'][$maxNumber['field']] =
                     substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
-                $this->exportHelper->addHistoryData('[TEMP]10  record[\'customer\'][\'delivery_address\']['.$maxNumber['field'].']', $order->id, json_encode($record));
             }
             if (strlen($record['customer']['invoice_address'][$maxNumber['field']]) > $maxNumber['limit']){
                 $record['customer']['invoice_address'][$maxNumber['field']] =
