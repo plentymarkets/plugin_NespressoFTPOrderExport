@@ -425,6 +425,7 @@ class OrderExportService
             }
         }
 
+        $this->exportHelper->addHistoryData('Record data for order: ' . $order->id, $order->id, json_encode($record));
         $this->saveRecord($order->id, $record, $xml_destination);
 
         $this->exportHelper->addHistoryData('End processing order ' . $order->id, $order->id);

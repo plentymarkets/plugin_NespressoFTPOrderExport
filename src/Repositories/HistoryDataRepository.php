@@ -31,6 +31,7 @@ class HistoryDataRepository implements HistoryDataRepositoryContract
         $dataHist->plentyOrderId    = (int)$data['plentyOrderId'];
         $dataHist->message          = (string)$data['message'];
         $dataHist->savedAt          = (string)$data['savedAt'];
+        $dataHist->data_column      = (string)$data['data_column'];
 
         return $this->database->save($dataHist);
     }
@@ -42,8 +43,8 @@ class HistoryDataRepository implements HistoryDataRepositoryContract
     public function deleteOldRecords(string $dateLimit) : void
     {
         $this->database->query(HistoryData::class)
-            ->where('sentAt', '!=', '')
-            ->where('sentAt', '<', $dateLimit)
+            ->where('savedAt', '!=', '')
+            ->where('savedAt', '<', $dateLimit)
             ->delete();
     }
 }

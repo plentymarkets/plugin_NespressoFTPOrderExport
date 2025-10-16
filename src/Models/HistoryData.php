@@ -26,6 +26,11 @@ class HistoryData extends Model implements \JsonSerializable
      */
     public $savedAt;
 
+    /**
+     * @var string
+     */
+    public $data_column;
+
     protected $primaryKeyFieldName     = 'id';
     protected $primaryKeyFieldType     = self::FIELD_TYPE_INT;
     protected $autoIncrementPrimaryKey = true;
@@ -50,7 +55,8 @@ class HistoryData extends Model implements \JsonSerializable
         return [
             'plentyOrderId'    => $this->plentyOrderId,
             'message'          => $this->message,
-            'savedAt'          => $this->savedAt
+            'savedAt'          => $this->savedAt,
+            'data_column'      => $this->data_column
         ];
     }
 }

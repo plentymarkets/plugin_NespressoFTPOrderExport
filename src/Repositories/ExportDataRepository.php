@@ -99,8 +99,8 @@ class ExportDataRepository implements ExportDataRepositoryContract
             ->delete();
 
         $this->database->query(HistoryData::class)
-            ->where('sentAt', '!=', '')
-            ->where('sentAt', '<', $dateLimit)
+            ->where('savedAt', '!=', '')
+            ->where('savedAt', '<', $dateLimit)
             ->delete();
     }
 

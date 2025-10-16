@@ -254,12 +254,13 @@ class ExportHelper
         return $fileName;
     }
 
-    public function addHistoryData($message, $plentyOrderId = -1)
+    public function addHistoryData($message, $plentyOrderId = -1, $dataColumn = '')
     {
         $data = [
             'plentyOrderId' => $plentyOrderId,
             'message'       => $message,
-            'savedAt'       => Carbon::now()->toDateTimeString()
+            'savedAt'       => Carbon::now()->toDateTimeString(),
+            'data_column'   => $dataColumn
         ];
 
         $this->historyData->save($data);
