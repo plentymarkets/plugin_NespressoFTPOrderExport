@@ -401,8 +401,8 @@ class OrderExportService
         } else {
             $maxNumberList = [
                 [
-                    'field' => 'name',
-                    'limit' => 18
+                    'field'         => 'name',
+                    'limit'         => 18
                 ],
                 [
                     'field' => 'first_name',
@@ -414,7 +414,7 @@ class OrderExportService
                 ],
                 [
                     'field' => 'post_code',
-                    'limit' => 5
+                    'limit' => 8
                 ],
                 [
                     'field' => 'contact',
@@ -424,10 +424,25 @@ class OrderExportService
         }
 
         foreach ($maxNumberList as $maxNumber){
+            if ($maxNumber['field'] == 'name'){
+                if ((int)$record['customer']['delivery_address']['company'] == 1){
+                    $maxNumber['limit'] = 35;
+                } else {
+                    $maxNumber['limit'] = 18;
+                }
+            }
             if (strlen($record['customer']['delivery_address'][$maxNumber['field']]) > $maxNumber['limit']){
                 $record['customer']['delivery_address'][$maxNumber['field']] =
                     mb_substr($record['customer']['delivery_address'][$maxNumber['field']], 0, $maxNumber['limit']);
                 $this->exportHelper->addHistoryData('Reduce delivery ' . $maxNumber['field'] . ' to ' . $maxNumber['limit'], $order->id);
+            }
+
+            if ($maxNumber['field'] == 'name'){
+                if ((int)$record['customer']['invoice_address']['company'] == 1){
+                    $maxNumber['limit'] = 35;
+                } else {
+                    $maxNumber['limit'] = 18;
+                }
             }
             if (strlen($record['customer']['invoice_address'][$maxNumber['field']]) > $maxNumber['limit']){
                 $record['customer']['invoice_address'][$maxNumber['field']] =
