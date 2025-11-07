@@ -144,7 +144,7 @@ class OrderExportService
 
         $deliveryAddress['post_code'] = $order->deliveryAddress->postalCode;
         if ($this->pluginVariant == 'AT') {
-            preg_replace("/[^0-9]/", "", $deliveryAddress['post_code']);
+            $deliveryAddress['post_code'] = preg_replace("/[^0-9]/", "", $deliveryAddress['post_code']);
         }
 
         $deliveryAddress['city'] = $order->deliveryAddress->town;
@@ -189,7 +189,7 @@ class OrderExportService
 
             $invoiceAddress['post_code'] = $order->billingAddress->postalCode;
             if ($this->pluginVariant == 'AT') {
-                preg_replace("/[^0-9]/", "", $invoiceAddress['post_code']);
+                $invoiceAddress['post_code'] = preg_replace("/[^0-9]/", "", $invoiceAddress['post_code']);
             }
 
             $invoiceAddress['city'] = $order->billingAddress->town;
