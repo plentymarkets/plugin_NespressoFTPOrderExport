@@ -48,6 +48,12 @@
           "label": "Config.fbm_folderPath",
           "options": {}
         },
+        "mms_folderPath": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.mms_folderPath",
+          "options": {}
+        },
         "pluginVariant": {
           "type": "selectBox",
           "required": false,

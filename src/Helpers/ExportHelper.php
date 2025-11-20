@@ -22,6 +22,11 @@ class ExportHelper
         $this->historyData = $historyData;
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @return array
+     */
     public function getNamesFromOrder(Order $order, string $pluginVariant)
     {
         //dismiss data in name1 if it contains wrong information
@@ -56,6 +61,12 @@ class ExportHelper
         ];
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @param $orderDeliveryName1
+     * @return mixed|string
+     */
     public function getDeliveryNameValue(Order $order, string $pluginVariant, $orderDeliveryName1)
     {
         if ($orderDeliveryName1 != '') {
@@ -67,6 +78,12 @@ class ExportHelper
         return $order->deliveryAddress->name3;
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @param $orderBillingName1
+     * @return mixed|string
+     */
     public function getInvoiceNameValue(Order $order, string $pluginVariant, $orderBillingName1)
     {
         if ($orderBillingName1 != '') {
@@ -75,6 +92,12 @@ class ExportHelper
         return $order->billingAddress->name3;
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @param $orderDeliveryName1
+     * @return mixed|string
+     */
     public function getDeliveryExtraNameValue(Order $order, string $pluginVariant, $orderDeliveryName1)
     {
         if ( ($pluginVariant == 'AT') && ($order->deliveryAddress->companyName != '')){
@@ -83,6 +106,11 @@ class ExportHelper
         return '';
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @return string
+     */
     public function getInvoiceExtraNameValue(Order $order, string $pluginVariant)
     {
         if ( ($pluginVariant == 'AT') && ($order->billingAddress->companyName != '')){
@@ -92,6 +120,11 @@ class ExportHelper
         return '';
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @return string
+     */
     public function getDeliveryAddressLine1Value(Order $order, string $pluginVariant)
     {
         if ($pluginVariant == 'DE') {
@@ -103,6 +136,11 @@ class ExportHelper
         return $order->deliveryAddress->address1 . ' ' . $order->deliveryAddress->address2;
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @return string
+     */
     public function getInvoiceAddressLine1Value(Order $order, string $pluginVariant)
     {
         if ($pluginVariant == 'DE') {
@@ -114,6 +152,13 @@ class ExportHelper
         return $order->billingAddress->address1 . ' ' . $order->billingAddress->address2;
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @param $orderDeliveryName1
+     * @param $addressLine1
+     * @return mixed|string
+     */
     public function getDeliveryAddressLine2Value(Order $order, string $pluginVariant, $orderDeliveryName1, $addressLine1)
     {
         if ($pluginVariant == 'DE') {
@@ -132,6 +177,13 @@ class ExportHelper
         return '';
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @param $orderBillingName1
+     * @param $addressLine1
+     * @return mixed|string
+     */
     public function getInvoiceAddressLine2Value(Order $order, string $pluginVariant, $orderBillingName1, $addressLine1)
     {
         if ($pluginVariant == 'DE') {
@@ -150,6 +202,12 @@ class ExportHelper
         return '';
     }
 
+    /**
+     * @param string $pluginVariant
+     * @param bool $isB2B
+     * @param bool $isFBM
+     * @return string
+     */
     public function getMovementCodeValue(string $pluginVariant, bool $isB2B, bool $isFBM)
     {
         if ($pluginVariant == 'DE') {
@@ -164,6 +222,11 @@ class ExportHelper
         return "2010";
     }
 
+    /**
+     * @param string $pluginVariant
+     * @param bool $isFBM
+     * @return string
+     */
     public function getDeliveryModeValue(string $pluginVariant, bool $isFBM)
     {
         if ($pluginVariant == 'DE') {
@@ -175,15 +238,30 @@ class ExportHelper
         return "GP";
     }
 
-    public function getSourceCodeValue(string $pluginVariant, bool $isB2B)
+    /**
+     * @param string $pluginVariant
+     * @param bool $isB2B
+     * @param $isMMS
+     * @return string
+     */
+    public function getOrderSourceValue(string $pluginVariant, bool $isB2B, $isMMS)
     {
         if (($pluginVariant == 'DE') && $isB2B) {
             return 'AMB';
         }
+        if (($pluginVariant == 'AT') && $isMMS) {
+            return 'MM';
+        }
         return 'AMZ';
     }
 
-    public function getPaymentModeValue(string $pluginVariant, bool $isB2B)
+    /**
+     * @param string $pluginVariant
+     * @param bool $isB2B
+     * @param bool $isMMS
+     * @return string
+     */
+    public function getPaymentModeValue(string $pluginVariant, bool $isB2B, bool $isMMS)
     {
         if ($pluginVariant == 'DE') {
             if ($isB2B) {
@@ -191,17 +269,17 @@ class ExportHelper
             }
             return 'XA';
         }
+        if (($pluginVariant == 'AT') && $isMMS) {
+            return "MM";
+        }
         return 'AM';
     }
 
-    public function getOrderSourceValue(string $pluginVariant, bool $isB2B)
-    {
-        if (($pluginVariant == 'DE') && $isB2B) {
-            return "AMB";
-        }
-        return "AMZ";
-    }
-
+    /**
+     * @param string $pluginVariant
+     * @param bool $isB2B
+     * @return string
+     */
     public function getChannelValue(string $pluginVariant, bool $isB2B)
     {
         if (($pluginVariant == 'DE') && $isB2B) {
@@ -249,6 +327,9 @@ class ExportHelper
                 break;
             case PluginConfiguration::FBM_DESTINATION:
                 $fileName = 'B2C_FBM_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-'.$batchNo.'.xml';
+                break;
+            case PluginConfiguration::MMS_DESTINATION:
+                $fileName = 'MMS_' . $thisTime->isoFormat("DDMMYY") . '-' . $thisTime->isoFormat("HHmm") . '-'.$batchNo.'.xml';
                 break;
         }
         return $fileName;

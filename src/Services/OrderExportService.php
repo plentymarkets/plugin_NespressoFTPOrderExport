@@ -93,8 +93,14 @@ class OrderExportService
         $isFBM = $this->orderHelper->isFBM($order, $this->pluginVariant);
         if ($isFBM){
             $isB2B = false;
+            $isMMS = false;
         } else {
-            $isB2B = $this->orderHelper->isB2B($order, $this->pluginVariant);
+            $isMMS = $this->orderHelper->isMMS($order, $this->pluginVariant);
+            if ($isMMS){
+                $isB2B = false;
+            } else {
+                $isB2B = $this->orderHelper->isB2B($order, $this->pluginVariant);
+            }
         }
         $xml_destination = 0;
         if ($this->pluginVariant == 'DE') {
@@ -226,7 +232,7 @@ class OrderExportService
         $privacyPolicy['allow_use_of_personal_data_for_marketing'] = 0;
 
         if ($this->pluginVariant == 'AT') {
-            $customer['category_1'] = '27';
+            $customer['category_1'] = $isMMS ? '25' : '27';
             $customer['invoicing_condition'] = 'O';
         }
 
@@ -318,7 +324,7 @@ class OrderExportService
         }
 
 
-        $orderData['order_source'] = $this->exportHelper->getSourceCodeValue($this->pluginVariant, $isB2B);
+        $orderData['order_source'] = $this->exportHelper->getOrderSourceValue($this->pluginVariant, $isB2B, $isMMS);
         $orderData['delivery_mode'] = $this->exportHelper->getDeliveryModeValue($this->pluginVariant, $isFBM);
         $orderData['payment_mode'] = $this->exportHelper->getPaymentModeValue($this->pluginVariant, $isB2B);
 
@@ -361,7 +367,7 @@ class OrderExportService
         }
 
         $record['address_changed'] = 1;
-        $record['order_source'] = $this->exportHelper->getOrderSourceValue($this->pluginVariant, $isB2B);
+        $record['order_source'] = $this->exportHelper->getOrderSourceValue($this->pluginVariant, $isB2B, $isMMS);
         $record['channel'] = $this->exportHelper->getChannelValue($this->pluginVariant, $isB2B);
         $record['customer'] = $customer;
         $record['order'] = $orderData;

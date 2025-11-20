@@ -64,6 +64,9 @@ class ClientForSFTP
             case PluginConfiguration::FBM_DESTINATION:
                 $folderPath = $this->credentials['ftp_folderPath_FBM'];
                 break;
+            case PluginConfiguration::MMS_DESTINATION:
+                $folderPath = $this->credentials['ftp_folderPath_MMS'];
+                break;
         };
         return $this->libraryCall->call(
             PluginConfiguration::PLUGIN_NAME . '::upload_file',

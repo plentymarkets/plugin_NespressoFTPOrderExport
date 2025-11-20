@@ -14,6 +14,7 @@ class PluginConfiguration
     const STANDARD_DESTINATION   = 0;
     const B2B_DESTINATION        = 1;
     const FBM_DESTINATION        = 2;
+    const MMS_DESTINATION        = 3;
 
     /**
      * @var ConfigRepository

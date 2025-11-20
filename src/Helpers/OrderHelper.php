@@ -27,6 +27,11 @@ class OrderHelper
         return $settingsRepository->getB2BProductList();
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @return bool
+     */
     public function isB2B(Order $order, string $pluginVariant)
     {
         if ($pluginVariant == 'DE') {
@@ -43,6 +48,11 @@ class OrderHelper
         return false;
     }
 
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @return bool
+     */
     public function isFBM(Order $order, string $pluginVariant)
     {
         if (($pluginVariant == 'DE') && (($order->referrerId == 4.01) || ($order->referrerId == 4.21))) {
@@ -50,4 +60,18 @@ class OrderHelper
         }
         return false;
     }
+
+    /**
+     * @param Order $order
+     * @param string $pluginVariant
+     * @return bool
+     */
+    public function isMMS(Order $order, string $pluginVariant)
+    {
+        if (($pluginVariant == 'AT') && ($order->referrerId == 178.01)) {
+            return true;
+        }
+        return false;
+    }
+
 }
